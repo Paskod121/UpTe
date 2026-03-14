@@ -18,7 +18,7 @@ Les données sont persistées dans le `localStorage` du navigateur. Rien n'est e
 
 ```
 gl-s4-planner/
-└── GL-S4-Planner.html      fichier unique — HTML, CSS, JavaScript
+└── index.html      fichier unique — HTML, CSS, JavaScript
 ```
 
 Tout réside dans ce fichier. Le CSS utilise des variables custom properties. Le JavaScript est organisé en trois classes : `Storage`, `UI`, `App`.
@@ -27,7 +27,7 @@ Tout réside dans ce fichier. Le CSS utilise des variables custom properties. Le
 
 ## Utilisation
 
-Ouvrir `GL-S4-Planner.html` dans un navigateur. C'est tout.
+Ouvrir `index.html` dans un navigateur. C'est tout.
 
 Aucune connexion internet requise après le premier chargement — à l'exception des polices Google Fonts (Syne, DM Sans). Pour un usage hors ligne complet, ces imports peuvent être retirés et remplacés par des polices système.
 
