@@ -6,7 +6,7 @@ Application web de gestion et planification des cours du Semestre 4 — Licence 
 
 ## Ce que fait l'application
 
-Un seul fichier HTML. Pas de serveur, pas de dépendances, pas de build.
+Application modulaire (HTML, CSS, JS séparés). Pas de build, pas de dépendances npm.
 
 L'emploi du temps du GL-S4 (2025–2026) est intégré directement : les 11 unités d'enseignement, leurs horaires, salles et professeurs. À partir de là, l'application permet de planifier des sessions de révision personnelles, de les modifier ou supprimer, et de suivre la répartition du temps de travail par UE.
 
@@ -14,22 +14,44 @@ Les données sont persistées dans le `localStorage` du navigateur. Rien n'est e
 
 ---
 
-## Structure
+## Structure (architecture modulaire)
+
+À la racine : uniquement le point d'entrée et les fichiers de projet. Tout le reste est dans `src/`.  
+**Documentation détaillée** : voir le dossier **[src/docs/](src/docs/)** (architecture, données, guide de développement).
 
 ```
-gl-s4-planner/
-└── index.html      fichier unique — HTML, CSS, JavaScript
+UpTe/
+├── index.html           point d'entrée — structure HTML
+├── README.md
+├── LICENSE
+└── src/
+    ├── css/
+    │   └── main.css         styles (variables, layout, composants)
+    ├── js/
+    │   ├── main.js           point d'entrée — expose App / UI, lance init
+    │   ├── constants.js      données (DAYS, MONTHS, COURSES_DATA, TYPE_*)
+    │   ├── storage.js        persistance localStorage (classe Storage)
+    │   ├── utils.js          helpers (formatDate, todayStr, esc, courseByCode…)
+    │   ├── ui.js             interface (navigation, modales, toasts, mini-calendrier, conseils)
+    │   └── app.js            logique métier (tableau de bord, emploi du temps, planificateur)
+    ├── images/               réservé aux images (logos, icônes, visuels)
+    ├── videos/               réservé aux vidéos
+    ├── fonts/                polices locales (pour usage hors ligne)
+    └── docs/                 documentation du projet
 ```
 
-Tout réside dans ce fichier. Le CSS utilise des variables custom properties. Le JavaScript est organisé en trois classes : `Storage`, `UI`, `App`.
+Le CSS utilise des variables (custom properties). Le JavaScript est découpé en modules ES : `Storage`, `UI`, `App` + constantes et utilitaires.
 
 ---
 
 ## Utilisation
 
-Ouvrir `index.html` dans un navigateur. C'est tout.
+Les modules ES nécessitent d'être servis en HTTP (pas d'ouverture directe en `file://`). Depuis la racine du projet :
 
-Aucune connexion internet requise après le premier chargement — à l'exception des polices Google Fonts (Syne, DM Sans). Pour un usage hors ligne complet, ces imports peuvent être retirés et remplacés par des polices système.
+- **Node** : `npx serve .` puis ouvrir l’URL indiquée (ex. http://localhost:3000).
+- **Python 3** : `python -m http.server 8080` puis http://localhost:8080.
+
+Aucune connexion internet requise après le premier chargement — à l'exception des polices Google Fonts (Syne, DM Sans). Pour un usage hors ligne complet, placez les fichiers de polices dans `src/fonts/` et adaptez les `@font-face` dans `src/css/main.css`.
 
 ---
 
@@ -61,7 +83,7 @@ Tout navigateur moderne. Testé sur Chrome 120+, Firefox 121+, Safari 17+. L'int
 
 ## Modifications courantes
 
-**Changer les données de cours** — la constante `COURSES_DATA` en tête du bloc `<script>`. Chaque objet suit ce format :
+**Changer les données de cours** — éditer `src/js/constants.js`, constante `COURSES_DATA`. Chaque objet suit ce format :
 
 ```js
 {
@@ -77,7 +99,7 @@ Tout navigateur moderne. Testé sur Chrome 120+, Firefox 121+, Safari 17+. L'int
 }
 ```
 
-**Ajouter une page** — créer un `<div class="page" id="page-xxx">`, ajouter l'entrée dans `.nav-item` et le cas dans `UI.navigate()`.
+**Ajouter une page** — créer un `<div class="page" id="page-xxx">` dans `index.html`, ajouter l'entrée dans `.nav-item`, et le cas correspondant dans `UI.navigate()` (`src/js/ui.js`).
 
 ---
 
