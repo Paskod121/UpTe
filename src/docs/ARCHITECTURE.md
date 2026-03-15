@@ -1,89 +1,186 @@
-# Architecture technique
+# Architecture — UpTe
 
-Structure du projet UpTe, modules JavaScript, flux de données et choix techniques.
-
----
-
-## 1. Vue d'ensemble
-
-UpTe est une **application web statique** : un seul HTML, assets (CSS, JS) côté client. Aucun serveur métier, aucun build. Données : constantes (cours) + `localStorage` (sessions).
-
-- **Front** : HTML5, CSS3 (variables custom), JavaScript ES modules.
-- **Données** : `COURSES_DATA` (cours) + `localStorage` (sessions).
-- **Navigateurs** : modernes, support ES modules et localStorage.
+Structure technique du projet, modules JavaScript, flux de données et choix de conception.
 
 ---
 
-## 2. Arborescence
+## Structure des fichiers
 
 ```
 UpTe/
-├── index.html
+├── index.html              point d'entrée — structure HTML, modales, scripts
+├── manifest.json           configuration PWA
 ├── README.md
 ├── CHANGELOG.md
 ├── LICENSE
 └── src/
-    ├── css/main.css
+    ├── css/
+    │   ├── main.css        point d'entrée CSS — @import uniquement
+    │   ├── variables.css   custom properties (:root) et thèmes (data-theme)
+    │   ├── layout.css      structure globale : sidebar, topbar, grilles, responsive
+    │   ├── components.css  composants : cards, slots, modales, formulaires, toasts, tips
+    │   └── utilities.css   boutons, tags, animations, classes helpers
     ├── js/
-    │   ├── main.js      → point d'entrée, expose App / UI
-    │   ├── constants.js  → cours, jours, mois, types
-    │   ├── storage.js    → localStorage
-    │   ├── utils.js      → dates, esc, courseByCode
-    │   ├── ui.js         → navigation, modales, toasts, calendrier, conseils
-    │   └── app.js        → dashboard, emploi du temps, planificateur
-    ├── images/
-    ├── videos/
-    ├── fonts/
+    │   ├── main.js         point d'entrée — expose App/UI sur window, lance init
+    │   ├── constants.js    données statiques : DAYS, MONTHS, COURSES_DATA, TYPE_*
+    │   ├── storage.js      persistance localStorage (classe Storage)
+    │   ├── utils.js        fonctions utilitaires pures (timeToMin, esc, formatDate…)
+    │   ├── ui.js           interface : navigation, thème, modales, toasts, calendrier, tips
+    │   └── app.js          logique métier : dashboard, emploi du temps, planificateur
+    ├── fonts/              polices locales (usage hors ligne)
+    ├── images/             logos, icônes, visuels
+    ├── videos/             réservé
     └── docs/
+        ├── README.md
+        ├── ARCHITECTURE.md (ce fichier)
+        ├── DEVELOPPEMENT.md
+        └── DONNEES.md
 ```
 
 ---
 
-## 3. Modules JavaScript
+## CSS — organisation modulaire
 
-**Chargement** : `index.html` charge `src/js/main.js` avec `type="module"`. Servir en HTTP (pas `file://`).
+`index.html` charge un seul fichier : `src/css/main.css`. Ce fichier ne contient que quatre `@import` dans l'ordre :
 
-**Dépendances** :
-- `main.js` → `app.js`, `ui.js` (et les attache à `window`)
-- `app.js` → `storage`, `ui`, `constants`, `utils`
-- `ui.js` → `storage`, `utils`, `constants` ; utilise `window.App` pour les rendus après navigation
-- `utils.js` → `constants.js`
-- `storage.js`, `constants.js` : sans dépendance
+```css
+@import "./variables.css";
+@import "./layout.css";
+@import "./components.css";
+@import "./utilities.css";
+```
 
-**Rôles** :
-- **Storage** : lecture/écriture localStorage (sessions).
-- **UI** : navigation, modales, toasts, mini-calendrier, page Conseils.
-- **App** : logique métier et rendu (dashboard, cours, emploi du temps, planificateur, CRUD sessions).
+L'ordre est intentionnel : les variables doivent être déclarées avant d'être utilisées dans les autres fichiers.
 
-Les `onclick` du HTML appellent `UI.*` ou `App.*` via `window`.
-
----
-
-## 4. Flux de données
-
-1. **Chargement** : `App.init()` → date, listes déroulantes, rendu des vues.
-2. **Navigation** : `UI.navigate(page)` → affichage de `#page-xxx`, puis selon la page appel à `App.renderDashboard()`, `App.renderWeekGrid()`, `App.renderPlanner()` ou `UI.renderTips()`.
-3. **Sessions** : formulaires → `App.saveStudySession()` / `updateStudySession()` / `deleteSession()` → `Storage.saveSessions()` → re-rendu des vues concernées.
-4. **Lecture** : cours = `COURSES_DATA` ; sessions = `Storage.getSessions()`.
-
-Aucune donnée envoyée à un serveur.
+| Fichier | Contenu | Modifier quand |
+|---|---|---|
+| `variables.css` | `:root`, `[data-theme="blue"]` | Ajout d'une couleur, d'un thème |
+| `layout.css` | Sidebar, topbar, grilles de pages, responsive structure | Changement de mise en page globale |
+| `components.css` | Cards, slots, modales, formulaires, toasts, tips, sessions | Modification d'un composant existant |
+| `utilities.css` | Boutons, tags, animations, helpers | Ajout d'un utilitaire, d'une animation |
 
 ---
 
-## 5. CSS
+## Modules JavaScript
 
-- Un seul fichier : `src/css/main.css`.
-- Variables dans `:root` (--bg, --surface, --green, etc.).
-- Polices : Google Fonts dans `index.html` ; pour hors ligne, mettre les fichiers dans `src/fonts/` et utiliser `@font-face` dans `main.css`.
+Le code JS est découpé en six fichiers ES modules. `main.js` est le seul point d'entrée ; les autres ne sont jamais chargés directement par `index.html`.
+
+### `constants.js`
+
+Données statiques. Aucune logique, aucun import externe.
+
+- `DAYS`, `DAYS_SHORT`, `MONTHS` — tableaux de labels localisés
+- `COURSES_DATA` — tableau des 11 UE du GL-S4 avec code, nom, crédits, prof, salle, jour, start, end, color
+- `TYPE_COLORS`, `TYPE_LABELS` — maps clé→valeur pour les types de sessions
+
+### `storage.js`
+
+Classe `Storage`. Un seul rôle : lire et écrire dans `localStorage`.
+
+```
+Storage.getSessions()      → Session[]
+Storage.saveSessions(arr)  → void
+Storage.get()              → { sessions: [] }
+Storage.set(data)          → void
+```
+
+Clé utilisée : `gl_s4_planner_v2`. Changer cette clé repart d'un localStorage vide.
+
+### `utils.js`
+
+Fonctions pures sans état, sans effet de bord.
+
+```
+timeToMin(t)          "14:30" → 870
+minToTime(m)          870 → "14:30"
+formatDate(d)         "2025-11-03" → "Lundi 3 Novembre"
+todayStr()            → "2025-11-03"
+uniqueId()            → identifiant unique (base36)
+esc(s)                → chaîne HTML-escapée
+courseByCode(code)    → objet UE ou undefined
+```
+
+### `ui.js`
+
+Classe `UI`. Gère tout ce qui est visuel sans toucher aux données métier.
+
+Responsabilités :
+- Navigation entre pages (`.page.active`)
+- Gestion des thèmes (`cycleTheme`, `applyTheme`, `getStoredTheme`)
+- Ouverture/fermeture des modales
+- Modale de confirmation (remplace `confirm()` natif) — retourne une `Promise<boolean>`
+- Toasts
+- Mini-calendrier du planificateur
+- Rendu des conseils de révision
+
+Thèmes disponibles : `green` (défaut), `blue`. Stocké dans `localStorage` sous la clé `upte_theme`.
+
+### `app.js`
+
+Classe `App`. Logique métier et rendu des données.
+
+Responsabilités :
+- `init()` — initialisation générale au chargement
+- `renderDashboard()` — cours du jour, sessions à venir, stats
+- `renderCourseList()` — liste des UE
+- `renderScheduleList()` — emploi du temps par jour
+- `renderWeekGrid()` — vue semaine visuelle
+- `renderPlanner()` — sessions planifiées + stats par UE
+- `showCourseDetail(code)` — modale détail d'une UE
+- `saveStudySession()` / `updateStudySession()` / `deleteSession()` — CRUD sessions
+
+### `main.js`
+
+Point d'entrée. Trois lignes utiles :
+
+```js
+window.App = App;
+window.UI = UI;
+document.addEventListener("DOMContentLoaded", () => {
+  UI.applyTheme(UI.getStoredTheme());
+  App.init();
+});
+```
+
+`App` et `UI` sont exposés sur `window` parce que le HTML appelle directement `App.xxx()` et `UI.xxx()` dans les attributs `onclick`.
 
 ---
 
-## 6. Extension
+## Flux de données
 
-- **Nouvelle page** : bloc `#page-xxx` dans `index.html`, lien nav, cas dans `UI.navigate()` + rendu éventuel dans `App`. Voir DEVELOPPEMENT.md.
-- **Nouveaux cours** : modifier `COURSES_DATA` dans `src/js/constants.js`. Voir DONNEES.md.
-- **Nouveau type de session** : ajouter dans `TYPE_COLORS` et `TYPE_LABELS` (constants.js) + option dans les formulaires.
+```
+COURSES_DATA (constants.js)
+      ↓
+App.render*()          lit les données statiques + Storage.getSessions()
+      ↓
+DOM                    innerHTML, classList, textContent
+      ↑
+Interactions           onclick dans index.html → App.xxx() / UI.xxx()
+      ↓
+Storage.saveSessions() écrit dans localStorage
+      ↓
+App.renderDashboard() / renderPlanner()   re-rendu partiel
+```
+
+Pas de state global réactif. Chaque action déclenche un re-rendu ciblé de la section concernée.
 
 ---
 
-*Document à maintenir avec le code.*
+## Thèmes
+
+Les thèmes sont implémentés via un attribut `data-theme` sur `<html>`. Le CSS déclare les surcharges dans `variables.css` :
+
+```css
+[data-theme="blue"] {
+  --green: #7dd3fc;
+  /* … */
+}
+```
+
+Ajouter un thème : déclarer un nouveau bloc `[data-theme="xxx"]` dans `variables.css`, ajouter l'entrée dans le tableau `THEMES` de `ui.js`.
+
+---
+
+## PWA
+
+`manifest.json` à la racine déclare l'application comme installable. `index.html` contient les meta tags nécessaires (`theme-color`, `apple-mobile-web-app-capable`). Pas de service worker pour l'instant — les données restent dans `localStorage`, pas de cache offline géré côté SW.
