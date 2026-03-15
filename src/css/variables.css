@@ -1,35 +1,71 @@
 :root {
+    /* ─── Arrière-plans ─── */
     --bg: #0a0d0b;
     --bg2: #111510;
     --bg3: #161c14;
     --surface: #1a2118;
     --surface2: #1f2a1c;
     --border: #2a3827;
+
+    /* ─── Accent principal (vert par défaut) ─── */
     --green: #4ade80;
     --green2: #22c55e;
     --green3: #16a34a;
     --green-dim: #86efac20;
     --green-glow: #4ade8040;
+
+    /* ─── Couleurs fixes ─── */
     --red: #ef4444;
     --red-dim: #ef444420;
     --orange: #f97316;
     --white: #f0f4ef;
+
+    /* ─── Texte ─── */
+    --text: #e8f0e6;
     --muted: #6b7f68;
     --muted2: #4a5c47;
-    --text: #e8f0e6;
+
+    /* ─── Effets ─── */
     --shadow: 0 8px 32px #00000080;
     --radius: 14px;
     --radius-sm: 8px;
+
+    /* ─── Couleurs sémantiques (composants) ─── */
+    --accent-logo-end: #0d7f34;
+    --event-cours-bg-a: #16a34a90;
+    --event-cours-bg-b: #15803d80;
+    --event-cours-text: #d1fae5;
+    --tip-bg-a: #16a34a18;
+    --tip-border: #16a34a40;
 }
 
+/* ─── Thème Bleu — surcharge complète ─── */
 [data-theme="blue"] {
+    /* Arrière-plans */
+    --bg: #060c14;
+    --bg2: #0a1628;
+    --bg3: #0c1a30;
+    --surface: #0f1f3d;
+    --surface2: #132847;
+    --border: #1a3356;
+
+    /* Accent */
     --green: #7dd3fc;
     --green2: #38bdf8;
     --green3: #0ea5e9;
     --green-dim: #38bdf820;
     --green-glow: #38bdf840;
-    --border: #1e3a4d;
-    --surface: #0f1729;
-    --surface2: #132236;
-    --bg3: #0c1522;
+
+    /* Texte */
+    --text: #e2eeff;
+    --muted: #4a6a8a;
+    --muted2: #2d4a6a;
+
+    /* Sémantiques */
+    --accent-logo-end: #0369a1;
+    --event-cours-bg-a: #0ea5e990;
+    --event-cours-bg-b: #0284c780;
+    --event-cours-text: #e0f2fe;
+    --tip-bg-a: #0ea5e918;
+    --tip-border: #0ea5e940;
 }

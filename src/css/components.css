@@ -689,8 +689,8 @@
 
 /* ─── Tips ─── */
 .tip-card {
-    background: linear-gradient(135deg, #16a34a18, #0a0d0b);
-    border: 1px solid #16a34a40;
+    background: linear-gradient(135deg, var(--tip-bg-a), var(--bg));
+    border: 1px solid var(--tip-border);
     border-radius: var(--radius);
     padding: 16px 18px;
     margin-bottom: 12px;

@@ -72,7 +72,7 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    background: linear-gradient(135deg, var(--green3), #0d7f34);
+    background: linear-gradient(135deg, var(--green3), var(--accent-logo-end));
     border-radius: 10px;
     padding: 8px 14px;
 }
@@ -368,9 +368,9 @@ body {
 }
 
 .wg-event.type-cours {
-    background: linear-gradient(135deg, #16a34a90, #15803d80);
+    background: linear-gradient(135deg, var(--event-cours-bg-a), var(--event-cours-bg-b));
     border-left: 3px solid var(--green);
-    color: #d1fae5;
+    color: var(--event-cours-text);
 }
 
 .wg-event.type-study {

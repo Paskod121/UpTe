@@ -9,8 +9,7 @@ export function timeToMin(t) {
 }
 
 export function minToTime(m) {
-  const h = Math.floor(m / 60),
-    mn = m % 60;
+  const h = Math.floor(m / 60), mn = m % 60;
   return `${String(h).padStart(2, "0")}:${String(mn).padStart(2, "0")}`;
 }
 
@@ -36,4 +35,29 @@ export function esc(s) {
 
 export function courseByCode(code) {
   return COURSES_DATA.find((c) => c.code === code);
+}
+
+export function getTheme() {
+  try {
+    const t = localStorage.getItem("upte_theme");
+    return t === "blue" ? "blue" : "green";
+  } catch {
+    return "green";
+  }
+}
+
+export function courseColor(course) {
+  if (!course) return "#4ade80";
+  const t = getTheme();
+  return typeof course.color === "object"
+    ? (course.color[t] ?? course.color.green)
+    : course.color;
+}
+
+export function typeColor(typeColors) {
+  if (!typeColors) return "#4ade80";
+  const t = getTheme();
+  return typeof typeColors === "object"
+    ? (typeColors[t] ?? typeColors.green)
+    : typeColors;
 }
