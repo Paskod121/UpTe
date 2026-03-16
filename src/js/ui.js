@@ -6,9 +6,9 @@ import { MONTHS } from "./constants.js";
 
 const THEME_KEY = "upte_theme";
 const THEMES = [
-  { id: "green", label: "Vert" },
-  { id: "blue", label: "Bleu" },
   { id: "light", label: "Clair" },
+  { id: "blue",  label: "Bleu" },
+  { id: "green", label: "Vert" },
 ];
 
 const THEME_META = {
@@ -25,7 +25,7 @@ export class UI {
   static getStoredTheme() {
     try {
       const t = localStorage.getItem(THEME_KEY);
-      return THEMES.some((x) => x.id === t) ? t : "green";
+      return THEMES.some((x) => x.id === t) ? t : "light";
     } catch {
       return "green";
     }
