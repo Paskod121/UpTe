@@ -4,7 +4,7 @@
 
 ## 1. Environnement
 
-- **Serveur local requis** (modules ES incompatibles avec `file://`) :
+- Serveur local requis (modules ES) :
   - Node : `npx serve .`
   - Python 3 : `python -m http.server 8080`
 - Aucune dépendance npm, aucun build.
@@ -13,10 +13,11 @@
 
 ## 2. Conventions
 
-- **JS** : ES modules (`import`/`export`), `"use strict"`. `App` et `UI` exposés sur `window` dans `main.js`.
-- **Validation** : toutes les règles métier dans `validator.js`. `app.js` appelle les fonctions du validator, n'implémente pas de règles directement.
-- **Couleurs** : jamais de hex en dur dans le CSS ni dans le JS de rendu — toujours via `var(--xxx)` ou `courseColor()` / `typeColor()`.
-- **Icônes** : SVG inline uniquement. Pas d'emoji ni de caractères spéciaux décoratifs.
+- **JS** : ES modules, `"use strict"`. `App`, `UI`, `Learn`, `Notes` exposés sur `window` dans `main.js`.
+- **Validation** : toutes les règles métier dans `validator.js`. `app.js` n'implémente aucune règle directement.
+- **Couleurs** : jamais de hex en dur — toujours `var(--xxx)` en CSS ou `courseColor()` / `typeColor()` en JS.
+- **Icônes** : SVG inline uniquement. Pas d'emoji ni de caractères décoratifs.
+- **Créneaux** : toujours passer par `getCourseSchedules()` — jamais lire `c.jour` directement.
 
 ---
 
@@ -26,72 +27,86 @@
 
 | Fichier | Modifier quand |
 |---|---|
-| `variables.css` | Changer une couleur, ajouter un thème |
+| `variables.css` | Couleur, nouveau thème |
 | `layout.css` | Sidebar, topbar, grilles, responsive |
-| `components.css` | Composant existant : card, slot, modale, formulaire, toast |
-| `utilities.css` | Bouton, tag, animation, helper, settings, color picker |
+| `components.css` | Card, slot, modale, formulaire, toast |
+| `utilities.css` | Bouton, tag, animation, schedule builder |
+| `learning.css` | Pomodoro, viewer documents, éditeur notes |
 
-Ne jamais écrire de styles dans `main.css`.
+Ne jamais écrire dans `main.css`.
 
 **Ajouter un thème :**
 
-1. `variables.css` — ajouter `[data-theme="mon-theme"] { ... }`
-2. `ui.js` — ajouter dans `THEMES` : `{ id: "mon-theme", label: "Mon thème" }`
-3. `ui.js` — ajouter dans `THEME_META` : `"mon-theme": "#xxxxxx"`
-4. `constants.js` — ajouter la clé dans `color` de chaque cours et dans `TYPE_COLORS`
-5. `utils.js` — `getTheme()` : ajouter le cas `if (t === "mon-theme") return "mon-theme"`
+1. `variables.css` → `[data-theme="mon-theme"] { ... }`
+2. `ui.js` → tableau `THEMES` : `{ id: "mon-theme", label: "..." }`
+3. `ui.js` → objet `THEME_META` : `"mon-theme": "#xxxxxx"`
+4. `constants.js` → clé `color` de chaque cours et `TYPE_COLORS`
+5. `utils.js` → `getTheme()` : ajouter `if (t === "mon-theme") return "mon-theme"`
 
 ### 3.2 Modifier les données de cours
 
-Éditer `src/js/constants.js`, tableau `COURSES_DATA`. Schéma complet dans `src/docs/DONNEES.md`.
+Éditer `src/js/constants.js`, tableau `COURSES_DATA`. Format attendu :
 
-Les utilisateurs peuvent aussi modifier leurs cours directement depuis la page Paramètres — ces modifications sont stockées dans `localStorage` (`upte_courses`) et prennent le dessus sur `COURSES_DATA`.
+```js
+{
+  code: "INF1427", name: "Structure de Données", credits: 3,
+  prof: "M. PASKOD", salle: "Amphi A",
+  schedules: [
+    { jour: "Lundi", start: "08:00", end: "10:00" },
+    { jour: "Jeudi", start: "14:00", end: "16:00" },
+  ],
+  color: { green: "#22c55e", blue: "#38bdf8", light: "#15803d" }
+}
+```
 
-### 3.3 Ajouter une page
+Les utilisateurs peuvent aussi modifier leurs cours depuis la page **Paramètres** via le schedule builder dynamique — ces modifications sont persistées dans `localStorage`.
 
-1. `index.html` — ajouter `<div class="page" id="page-ma-page">` et le `nav-item`
-2. `ui.js` — ajouter dans `titles` de `navigate()` et le cas de rendu
-3. `app.js` — implémenter `renderMaPage()` si nécessaire
+### 3.3 Ajouter un créneau à un cours existant
 
-### 3.4 Ajouter un type de session
+Depuis l'interface : Paramètres → cliquer sur l'icône modifier du cours → "+ Ajouter un créneau".
 
-1. `constants.js` — ajouter dans `TYPE_COLORS` (avec les 3 clés `green/blue/light`) et `TYPE_LABELS`
-2. `index.html` — ajouter `<option>` dans les deux selects de type (modales Ajouter et Modifier)
+Depuis le code : ajouter un objet `{ jour, start, end }` dans le tableau `schedules` du cours dans `constants.js`.
 
-### 3.5 Ajouter une règle de validation
+### 3.4 Ajouter une page
 
-Ouvrir `src/js/validator.js`. Chaque formulaire a sa fonction dédiée. Ajouter la règle dans la fonction concernée — elle utilisera `setFieldError(fieldId, message)` pour afficher l'erreur sous le champ.
+1. `index.html` — `<div class="page" id="page-ma-page">` et `nav-item`
+2. `ui.js` — `titles` dans `navigate()` et cas de rendu
+3. `app.js` (ou nouveau module) — `renderMaPage()`
 
-### 3.6 Ajouter une image, vidéo, police
+### 3.5 Ajouter un type de session
 
-- Images : `src/images/`
-- Vidéos : `src/videos/`
-- Polices : `src/fonts/` + `@font-face` dans `variables.css`
+1. `constants.js` — `TYPE_COLORS` (3 clés green/blue/light) et `TYPE_LABELS`
+2. `index.html` — `<option>` dans les deux selects de type
+
+### 3.6 Ajouter une règle de validation
+
+Ouvrir `src/js/validator.js`, trouver la fonction concernée, appeler `setFieldError(fieldId, message)`.
 
 ---
 
 ## 4. Fichiers à ne pas casser
 
-- `index.html` — ne pas renommer. Chemins `src/css/main.css` et `src/js/main.js` fixes.
-- `src/css/main.css` — uniquement les `@import`, dans l'ordre : variables → layout → components → utilities.
-- `src/js/main.js` — point d'entrée unique JS.
-- `Storage.KEY` (`gl_s4_planner_v2`) — changer cette clé repart d'un localStorage vide pour les sessions.
+- `index.html` — chemins `src/css/main.css` et `src/js/main.js` fixes.
+- `src/css/main.css` — uniquement `@import`, ordre : variables → layout → components → utilities → learning.
+- `src/js/main.js` — point d'entrée unique, expose les 4 classes sur `window`.
+- `Storage.KEY` (`gl_s4_planner_v2`) — changer repart d'un localStorage vide.
+- Ne jamais lire `c.jour`, `c.start`, `c.end` directement — toujours `getCourseSchedules(c)`.
 
 ---
 
 ## 5. Déploiement
 
-Copier la racine + `src/` sur un hébergeur statique (Netlify, GitHub Pages). Aucun build requis.
+Copier racine + `src/` sur hébergeur statique. Aucun build requis.
 
 ---
 
 ## 6. Mise à jour de la documentation
 
-Après une modification importante :
+Après toute modification importante :
 
-1. `ARCHITECTURE.md` — si structure ou modules changent
-2. `DONNEES.md` — si modèle de données change
-3. `DEVELOPPEMENT.md` — si conventions ou procédures changent
-4. `src/docs/README.md` — si nouveau document ajouté
-5. `README.md` racine — si utilisation ou structure globale change
-6. `CHANGELOG.md` — entrée pour chaque modification notable
+1. `ARCHITECTURE.md` — structure ou modules
+2. `DONNEES.md` — modèle de données
+3. `DEVELOPPEMENT.md` — conventions ou procédures
+4. `src/docs/README.md` — si nouveau document
+5. `README.md` racine — structure globale
+6. `CHANGELOG.md` — entrée datée

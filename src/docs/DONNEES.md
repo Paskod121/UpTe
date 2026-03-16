@@ -4,29 +4,42 @@
 
 ## 1. Cours (UE)
 
-Définis dans `src/js/constants.js` (données par défaut) ou dans `localStorage` sous la clé `upte_courses` (données personnalisées).
+Source : `constants.js` (défaut) ou `localStorage` clé `upte_courses` (personnalisé).
 
 ```js
 {
-  code:    "INF1427",       // string — identifiant unique, format A-Z0-9_ 2–12 chars
-  name:    "Structure de Données", // string — 3 à 80 caractères
-  credits: 3,               // number — entier 1–10
-  prof:    "M. DUPONT",     // string — peut être vide
-  salle:   "Amphi A",       // string — peut être vide
-  jour:    "Lundi",         // string | null — jour de la semaine ou null si non défini
-  start:   "08:00",         // string | null — format HH:MM, requis si jour défini
-  end:     "10:00",         // string | null — format HH:MM, requis si jour défini, > start
+  code:      "INF1427",          // string — A-Z0-9_ 2–12 chars, unique
+  name:      "Structure de Données", // string — 3–80 chars
+  credits:   3,                  // number — entier 1–10
+  prof:      "M. PASKOD",        // string — peut être vide
+  salle:     "Amphi A",          // string — peut être vide
+  schedules: [                   // tableau de créneaux — peut être vide
+    { jour: "Lundi",    start: "08:00", end: "10:00" },
+    { jour: "Jeudi",    start: "14:00", end: "16:00" },
+  ],
   color: {
-    green: "#22c55e",       // hex — couleur thème vert
-    blue:  "#38bdf8",       // hex — couleur thème bleu
-    light: "#15803d",       // hex — couleur thème clair
+    green: "#22c55e",
+    blue:  "#38bdf8",
+    light: "#15803d",
   }
 }
 ```
 
-Les cours ajoutés manuellement ont `color: { green: hex, blue: hex, light: hex }` avec le même hex pour les trois thèmes.
+Un cours peut avoir zéro, un ou plusieurs créneaux. Chaque créneau spécifie un jour de la semaine et une plage horaire. Il n'y a pas de limite au nombre de créneaux par cours.
 
-`getActiveCourses()` dans `utils.js` retourne les cours custom si `upte_courses` existe dans localStorage, sinon `COURSES_DATA`.
+### Rétrocompatibilité
+
+L'ancien format (`jour`, `start`, `end` directs sur l'objet) est converti automatiquement par `normalizeCourse()` dans `utils.js` :
+
+```js
+// Ancien — toujours lu correctement
+{ code: "INF1426", jour: "Lundi", start: "14:00", end: "18:00" }
+
+// Converti en
+{ code: "INF1426", schedules: [{ jour: "Lundi", start: "14:00", end: "18:00" }] }
+```
+
+Aucune migration manuelle des données localStorage n'est nécessaire.
 
 ---
 
@@ -36,17 +49,17 @@ Clé localStorage : `gl_s4_planner_v2` — objet `{ sessions: Session[] }`.
 
 ```js
 {
-  id:         "lxk2f3abc",  // string — identifiant unique base36
-  courseCode: "INF1427",    // string — référence au code d'un cours
-  date:       "2025-11-03", // string — format YYYY-MM-DD
-  duration:   2,            // number — heures, 0.5 à 12
-  startTime:  "08:00",      // string — format HH:MM, peut être vide
-  type:       "revision",   // string — clé de TYPE_LABELS
-  notes:      "Chapitre 3", // string — peut être vide
+  id:         "lxk2f3abc",   // string — base36
+  courseCode: "INF1427",     // string — code d'un cours
+  date:       "2025-11-03",  // string — YYYY-MM-DD
+  duration:   2,             // number — 0.5 à 12
+  startTime:  "08:00",       // string — HH:MM, peut être vide
+  type:       "revision",    // string — clé de TYPE_LABELS
+  notes:      "Chapitre 3",  // string — peut être vide
 }
 ```
 
-Types disponibles : `revision`, `exercices`, `lecture`, `projet`, `tp`.
+Types : `revision`, `exercices`, `lecture`, `projet`, `tp`.
 
 ---
 
@@ -56,46 +69,99 @@ Clé localStorage : `upte_settings`.
 
 ```js
 {
-  universite: "UNIVERSITÉ DE LOMÉ",  // string — requis, max 60 chars
-  ecole:      "EPL",                  // string — requis, max 60 chars
-  parcours:   "Licence Pro GL",       // string — requis, max 60 chars
-  semestre:   "Semestre 4",           // string — requis, max 30 chars
+  universite: "UNIVERSITÉ DE LOMÉ",  // max 60 chars
+  ecole:      "EPL",                  // max 60 chars
+  parcours:   "Licence Pro GL",       // max 60 chars
+  semestre:   "Semestre 4",           // max 30 chars
 }
 ```
 
-Valeurs par défaut définies dans `Storage.DEFAULT_SETTINGS`. Si la clé n'existe pas, les valeurs par défaut sont utilisées.
+Valeurs par défaut dans `Storage.DEFAULT_SETTINGS`.
 
 ---
 
-## 4. Thème
+## 4. Documents
 
-Clé localStorage : `upte_theme`.
+Base IndexedDB `upte_docs`, store `documents`.
 
-Valeurs possibles : `"light"` (défaut), `"blue"`, `"green"`.
+```js
+{
+  id:         "abc123",       // string — base36
+  courseCode: "INF1427",      // string
+  name:       "cours.pdf",    // string — nom du fichier
+  type:       "pdf",          // "pdf" | "docx" | "pptx" | "other"
+  size:       204800,         // number — octets
+  date:       "2025-11-03",   // string — YYYY-MM-DD
+  data:       ArrayBuffer,    // contenu binaire du fichier
+}
+```
 
----
-
-## 5. Règles de validation
-
-Toutes les règles sont dans `src/js/validator.js`. Résumé :
-
-| Champ | Règle |
-|---|---|
-| `code` cours | `A-Z0-9_`, 2–12 caractères, unique |
-| `name` cours | 3–80 caractères |
-| `credits` | Entier 1–10 |
-| `jour` + `start` + `end` | Si `jour` défini, `start` et `end` requis. `end` > `start`. Durée max 8h. |
-| `duration` session | 0.5–12 heures |
-| `date` session | Format valide, requis |
-| `startTime` session | Format HH:MM, session ne dépasse pas minuit |
+Taille max par fichier : 20 Mo.
 
 ---
 
-## 6. Clés localStorage — récapitulatif
+## 5. Notes
 
-| Clé | Contenu | Suppression |
+Base IndexedDB `upte_notes`, store `notes`.
+
+```js
+{
+  id:         "xyz789",
+  courseCode: "INF1427",
+  title:      "Cours du 3 nov.",
+  content:    "<h1>...</h1><p>...</p>",  // HTML
+  wordCount:  142,
+  charCount:  891,
+  createdAt:  "2025-11-03T08:00:00.000Z",
+  updatedAt:  "2025-11-03T09:12:00.000Z",
+}
+```
+
+---
+
+## 6. Thème
+
+Clé localStorage : `upte_theme`. Valeurs : `"light"` (défaut), `"blue"`, `"green"`.
+
+---
+
+## 7. Pomodoro — stats
+
+Clé localStorage : `upte_pomo_total`. Nombre entier — total de sessions Pomodoro complétées.
+
+---
+
+## 8. Clés localStorage — récapitulatif
+
+| Clé | Contenu | Réinitialiser |
 |---|---|---|
-| `gl_s4_planner_v2` | Sessions de révision | Manuel ou `Storage.saveSessions([])` |
-| `upte_settings` | Paramètres établissement | `Storage.saveSettings(DEFAULT)` |
-| `upte_courses` | Cours personnalisés | `Storage.resetCourses()` — revient aux données par défaut |
+| `gl_s4_planner_v2` | Sessions de révision | `Storage.saveSessions([])` |
+| `upte_settings` | Paramètres établissement | `Storage.saveSettings(DEFAULT_SETTINGS)` |
+| `upte_courses` | Cours personnalisés | `Storage.resetCourses()` |
 | `upte_theme` | Thème actif | `localStorage.removeItem("upte_theme")` |
+| `upte_pomo_total` | Compteur Pomodoro | `localStorage.removeItem("upte_pomo_total")` |
+
+## 9. Bases IndexedDB
+
+| Base | Store | Contenu |
+|---|---|---|
+| `upte_docs` | `documents` | Fichiers PDF/DOCX/PPTX par UE |
+| `upte_notes` | `notes` | Notes HTML par UE |
+
+---
+
+## 10. Règles de validation
+
+Toutes dans `src/js/validator.js`.
+
+| Formulaire | Champ | Règle |
+|---|---|---|
+| Cours | `code` | `A-Z0-9_` 2–12 chars, unique |
+| Cours | `name` | 3–80 chars |
+| Cours | `credits` | entier 1–10 |
+| Cours | `schedules[i]` | jour + start + end requis, end > start, durée ≤ 8h, pas de doublon jour+start |
+| Session | `courseCode` | requis |
+| Session | `date` | requis, valide |
+| Session | `duration` | 0.5–12h |
+| Session | `startTime` | HH:MM valide, pas de dépassement minuit |
+| Paramètres | tous | requis, limites de longueur |

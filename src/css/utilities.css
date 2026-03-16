@@ -1,122 +1,644 @@
 /* ─── Boutons ─── */
 .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 8px 16px;
-    border-radius: var(--radius-sm);
-    font-family: "DM Sans", sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
-    white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-family: "DM Sans", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--green3);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--green2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px var(--green-glow);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.btn-ghost:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.btn-danger {
+  background: var(--red-dim);
+  color: var(--red);
+  border: 1px solid #ef444430;
+}
+
+.btn-danger:hover {
+  background: #ef444430;
+}
+
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+/* ─── Tags ─── */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.tag-green {
+  background: var(--green-dim);
+  color: var(--green);
+}
+
+.tag-orange {
+  background: #f9731620;
+  color: var(--orange);
+}
+
+.tag-red {
+  background: var(--red-dim);
+  color: var(--red);
+}
+
+.tag-muted {
+  background: var(--surface2);
+  color: var(--muted);
+}
+
+/* ─── Animations ─── */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
-  .btn-primary { background: var(--green3); color: #fff; }
-  .btn-primary:hover {
-    background: var(--green2);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px var(--green-glow);
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
-  .btn-ghost:hover { background: var(--surface); color: var(--text); }
-  .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid #ef444430; }
-  .btn-danger:hover { background: #ef444430; }
-  .btn-sm { padding: 5px 10px; font-size: 12px; }
-  
-  /* ─── Tags ─── */
-  .tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    padding: 3px 8px;
-    border-radius: 4px;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
   }
-  .tag-green  { background: var(--green-dim); color: var(--green); }
-  .tag-orange { background: #f9731620; color: var(--orange); }
-  .tag-red    { background: var(--red-dim); color: var(--red); }
-  .tag-muted  { background: var(--surface2); color: var(--muted); }
-  
-  /* ─── Animations ─── */
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
-  @keyframes toast-in {
-    from { opacity: 0; transform: translateX(20px); }
-    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateX(20px);
   }
-  @keyframes toast-out {
-    to { opacity: 0; transform: translateX(20px); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+
+.page {
+  display: none;
+}
+
+.page.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+/* ─── Divider ─── */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+
+/* ─── Helpers ─── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-family: "Syne", sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.gap-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mb-4 {
+  margin-bottom: 16px;
+}
+
+.mb-6 {
+  margin-bottom: 24px;
+}
+
+/* ─── Settings — liste des cours ─── */
+.settings-course-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  margin-bottom: 6px;
+  transition: background .2s;
+}
+
+.settings-course-item:hover {
+  background: var(--surface);
+}
+
+.sci-color {
+  width: 4px;
+  height: 36px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.sci-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sci-code {
+  font-family: "Syne", sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.sci-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sci-meta {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.sci-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* ─── Color picker ─── */
+.color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.color-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform .15s, border-color .15s;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.color-dot:hover {
+  transform: scale(1.15);
+}
+
+.color-dot.active {
+  border-color: var(--text);
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text);
+}
+
+/* ─── Schedule rows — créneaux horaires ─── */
+.schedule-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.schedule-row {
+  display: grid;
+  grid-template-columns: 1fr 100px auto 100px auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color .2s;
+}
+
+.schedule-row:hover {
+  border-color: var(--green3);
+}
+
+.schedule-select {
+  font-size: 12px;
+  padding: 7px 10px;
+}
+
+.schedule-time {
+  font-size: 12px;
+  padding: 7px 10px;
+}
+
+.schedule-sep {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.schedule-del {
+  flex-shrink: 0;
+}
+
+.schedule-add-btn {
+  width: 100%;
+  justify-content: center;
+  border-style: dashed;
+  margin-top: 4px;
+}
+
+.schedule-add-btn:hover {
+  border-style: solid;
+  background: var(--green-dim);
+  color: var(--green);
+}
+
+.schedule-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--muted2);
+  background: var(--bg3);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+}
+
+@media (max-width: 500px) {
+  .schedule-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
   }
-  .fade-in { animation: fadeIn 0.3s ease; }
-  .page { display: none; }
-  .page.active { display: block; animation: fadeIn 0.3s ease; }
-  
-  /* ─── Divider ─── */
-  .divider { height: 1px; background: var(--border); margin: 16px 0; }
-  
-  /* ─── Helpers ─── */
-  .section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
+
+  .schedule-select {
+    grid-column: 1 / -1;
   }
-  .section-title {
-    font-family: "Syne", sans-serif;
-    font-weight: 700;
-    font-size: 15px;
-    color: var(--text);
+
+  .schedule-sep {
+    display: none;
   }
-  .gap-list { display: flex; flex-direction: column; gap: 8px; }
-  .mb-4 { margin-bottom: 16px; }
-  .mb-6 { margin-bottom: 24px; }
-  
-  /* ─── Settings — liste des cours ─── */
-  .settings-course-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    border-radius: var(--radius-sm);
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    margin-bottom: 6px;
-    transition: background .2s;
+
+  .schedule-del {
+    grid-column: 2;
+    justify-self: end;
   }
-  .settings-course-item:hover { background: var(--surface); }
-  .sci-color { width: 4px; height: 36px; border-radius: 2px; flex-shrink: 0; }
-  .sci-info {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    flex-wrap: wrap;
+}
+
+/* ─── Créneaux horaires dynamiques ─── */
+.schedule-slots-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.schedule-slot-row {
+  animation: fadeIn .2s ease;
+}
+
+.slot-row-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.slot-sep {
+  font-size: 14px;
+  color: var(--muted);
+  padding-top: 10px;
+  flex-shrink: 0;
+}
+
+.slot-del-btn {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.schedule-slots-empty {
+  font-size: 12px;
+  color: var(--muted2);
+  text-align: center;
+  padding: 12px 0;
+  font-style: italic;
+}
+
+.schedule-add-btn {
+  width: 100%;
+  justify-content: center;
+  border-style: dashed;
+  margin-top: 4px;
+}
+
+.schedule-add-btn:hover {
+  border-color: var(--green3);
+  color: var(--green);
+  background: var(--green-dim);
+}
+
+.schedule-section-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: .3px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ─── Schedule builder — formulaire multi-créneaux ─── */
+.schedule-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.schedule-row {
+  display: grid;
+  grid-template-columns: 110px 80px 16px 80px 1fr 28px;
+  gap: 6px;
+  align-items: center;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  transition: border-color .2s;
+}
+
+.schedule-row:hover {
+  border-color: var(--green3);
+}
+
+.schedule-sep {
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted2);
+}
+
+.schedule-jour,
+.schedule-start,
+.schedule-end {
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
+.schedule-salle {
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
+.schedule-del {
+  flex-shrink: 0;
+}
+
+.btn-add-slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-family: "DM Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .2s;
+  width: 100%;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.btn-add-slot:hover {
+  border-color: var(--green3);
+  color: var(--green);
+  background: var(--green-dim);
+}
+
+/* ─── Course detail — créneaux ─── */
+.cd-slot-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+  font-size: 12.5px;
+}
+
+.cd-slot-day {
+  font-family: "Syne", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  min-width: 70px;
+}
+
+.cd-slot-time {
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+}
+
+.cd-slot-salle {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ─── Settings — slots tags ─── */
+.sci-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 3px;
+}
+
+.sci-slot-tag {
+  font-size: 10px;
+  background: var(--green-dim);
+  color: var(--green);
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* ─── Schedules error ─── */
+#add-schedules-error,
+#edit-schedules-error {
+  font-size: 11px;
+  color: var(--red);
+  margin-top: 4px;
+  display: none;
+}
+
+#add-schedules-error.show,
+#edit-schedules-error.show {
+  display: block;
+}
+
+/* ─── Responsive schedule row ─── */
+@media (max-width: 600px) {
+  .schedule-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
   }
-  .sci-code { font-family: "Syne", sans-serif; font-weight: 700; font-size: 11px; flex-shrink: 0; }
-  .sci-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sci-meta { font-size: 11px; color: var(--muted); white-space: nowrap; }
-  .sci-actions { display: flex; gap: 4px; flex-shrink: 0; }
-  
-  /* ─── Color picker ─── */
-  .color-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
-  .color-dot {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    border: 2px solid transparent;
-    cursor: pointer;
-    transition: transform .15s, border-color .15s;
-    padding: 0;
-    flex-shrink: 0;
+
+  .schedule-sep {
+    display: none;
   }
-  .color-dot:hover { transform: scale(1.15); }
-  .color-dot.active {
-    border-color: var(--text);
-    transform: scale(1.15);
-    box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text);
+
+  .schedule-salle {
+    grid-column: 1 / -1;
   }
+
+  .schedule-del {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+  }
+}
+
+/* ─── Schedule builder — modales cours ─── */
+.schedule-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.schedule-row {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  transition: border-color .2s;
+}
+
+.schedule-row:hover {
+  border-color: var(--green3);
+}
+
+.schedule-row-inner {
+  display: grid;
+  grid-template-columns: 1fr 90px 20px 90px 32px;
+  align-items: center;
+  gap: 8px;
+}
+
+.schedule-select {
+  font-size: 12px;
+  padding: 6px 8px;
+  height: 34px;
+}
+
+.schedule-time {
+  font-size: 12px;
+  padding: 6px 8px;
+  height: 34px;
+  text-align: center;
+}
+
+.schedule-sep {
+  text-align: center;
+  color: var(--muted2);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.schedule-add-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: 4px;
+  border-style: dashed;
+}
+
+.schedule-add-btn:hover {
+  border-color: var(--green3);
+  color: var(--green);
+  background: var(--green-dim);
+  border-style: dashed;
+}
+
+.schedule-empty-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted2);
+  padding: 10px 0 8px;
+}
+
+@media (max-width: 480px) {
+  .schedule-row-inner {
+    grid-template-columns: 1fr 1fr 32px;
+    grid-template-rows: auto auto;
+  }
+
+  .schedule-select {
+    grid-column: 1 / -1;
+  }
+
+  .schedule-sep {
+    display: none;
+  }
+}

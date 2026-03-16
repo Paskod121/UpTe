@@ -14,11 +14,39 @@
     />
     <meta name="apple-mobile-web-app-title" content="UpTe" />
     <title>UpTe ● Planificateur de revision</title>
+
+    <!-- Open Graph — prévisualisation WhatsApp, Discord, réseaux -->
+    <meta property="og:title" content="Up●Te" />
+    <meta
+      property="og:description"
+      content="Tes cours, tes révisions, tes notes. Tout au même endroit."
+    />
+    <meta
+      property="og:image"
+      content="https://up-te.vercel.app/src/images/og-cover.png"
+    />
+    <meta property="og:url" content="https://up-te.vercel.app" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Up●Te" />
+
+    <!-- Twitter/X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Up●Te" />
+    <meta
+      name="twitter:description"
+      content="Tes cours, tes révisions, tes notes. Tout au même endroit."
+    />
+    <meta
+      name="twitter:image"
+      content="https://up-te.vercel.app/src/images/og-cover.png"
+    />
+
     <link rel="manifest" href="manifest.json" />
     <link
       href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap"
       rel="stylesheet"
     />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="stylesheet" href="src/css/main.css" />
   </head>
   <body>
@@ -143,6 +171,45 @@
             </svg>
             Conseils r&eacute;vision
           </div>
+          <div class="nav-item" onclick="UI.navigate('learn')">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+            </svg>
+            Apprentissage
+          </div>
+
+          <div class="nav-item" onclick="UI.navigate('notes')">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+              <path
+                d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
+              />
+              <line x1="12" y1="6" x2="16" y2="6" />
+              <line x1="12" y1="10" x2="16" y2="10" />
+              <line x1="12" y1="14" x2="16" y2="14" />
+            </svg>
+            Prise de notes
+          </div>
+
           <div class="nav-item" onclick="UI.navigate('settings')">
             <svg
               width="16"
@@ -510,6 +577,66 @@
 
           <!-- TIPS -->
           <div class="page" id="page-tips"><div id="tipsContent"></div></div>
+
+          <!-- LEARN -->
+          <div class="page" id="page-learn">
+            <div class="learn-grid">
+              <!-- Colonne Pomodoro -->
+              <div class="pomo-card">
+                <div
+                  class="card-title"
+                  style="margin-bottom: 20px; justify-content: center"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  Pomodoro
+                </div>
+                <div id="pomodoroWidget"></div>
+              </div>
+
+              <!-- Colonne Documents -->
+              <div class="docs-card">
+                <div class="docs-card-header">
+                  <div class="docs-card-title">
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    >
+                      <path
+                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                      />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                    Documents par UE
+                  </div>
+                  <div class="tag tag-muted">PDF · DOCX · PPTX</div>
+                </div>
+                <div class="docs-card-body">
+                  <div id="learnDocsPanel"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- NOTES -->
+          <div class="page" id="page-notes">
+            <div id="notesPage"></div>
+          </div>
 
           <!-- SETTINGS -->
           <div class="page" id="page-settings">
@@ -904,7 +1031,13 @@
         </div>
         <div class="modal-body" id="cdBody"></div>
         <div class="modal-footer">
-          <button class="btn btn-primary" onclick="UI.closeModal('courseDetail');UI.openModal('addStudy')">
+          <button
+            class="btn btn-primary"
+            onclick="
+              UI.closeModal('courseDetail');
+              UI.openModal('addStudy');
+            "
+          >
             <svg
               width="12"
               height="12"
@@ -922,6 +1055,7 @@
     </div>
 
     <!-- MODAL : Ajouter cours -->
+    <!-- MODAL : Ajouter cours -->
     <div class="modal-overlay" id="modal-addCourse">
       <div class="modal">
         <div class="modal-header">
@@ -934,10 +1068,12 @@
               stroke="var(--green)"
               stroke-width="2"
               style="margin-right: 6px; vertical-align: middle"
+              stroke-linecap="round"
             >
               <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" /></svg
-            >Ajouter un cours
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Ajouter un cours
           </div>
           <button class="modal-close" onclick="UI.closeModal('addCourse')">
             <svg
@@ -956,8 +1092,8 @@
         <div class="modal-body">
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Code UE *</label
-              ><input
+              <label class="form-label">Code UE *</label>
+              <input
                 type="text"
                 class="form-input"
                 id="add-code"
@@ -965,8 +1101,8 @@
               />
             </div>
             <div class="form-group">
-              <label class="form-label">Cr&eacute;dits</label
-              ><input
+              <label class="form-label">Crédits</label>
+              <input
                 type="number"
                 class="form-input"
                 id="add-credits"
@@ -977,18 +1113,18 @@
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Intitul&eacute; *</label
-            ><input
+            <label class="form-label">Intitulé *</label>
+            <input
               type="text"
               class="form-input"
               id="add-name"
-              placeholder="Structure de Donn&eacute;es"
+              placeholder="Structure de Données"
             />
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Professeur</label
-              ><input
+              <label class="form-label">Professeur</label>
+              <input
                 type="text"
                 class="form-input"
                 id="add-prof"
@@ -996,43 +1132,23 @@
               />
             </div>
             <div class="form-group">
-              <label class="form-label">Salle</label
-              ><input
+              <label class="form-label">Salle</label>
+              <input
                 type="text"
                 class="form-input"
                 id="add-salle"
-                placeholder="Salle N°2 Amphi Ampah Johnson"
+                placeholder="Amphi A"
               />
             </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Jour</label
-              ><select class="form-select" id="add-jour">
-                <option value="">-- Aucun --</option>
-                <option>Lundi</option>
-                <option>Mardi</option>
-                <option>Mercredi</option>
-                <option>Jeudi</option>
-                <option>Vendredi</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Heure d&eacute;but</label
-              ><input type="time" class="form-input" id="add-start" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Heure fin</label
-              ><input type="time" class="form-input" id="add-end" />
-            </div>
-            <div class="form-group"></div>
           </div>
           <div class="form-group">
             <label class="form-label">Couleur</label>
             <div class="color-picker" id="add-color-picker"></div>
             <input type="hidden" id="add-color-val" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Créneaux horaires</label>
+            <div id="add-schedules-wrap"></div>
           </div>
         </div>
         <div class="modal-footer">
@@ -1048,8 +1164,9 @@
               stroke="currentColor"
               stroke-width="2.5"
             >
-              <polyline points="20 6 9 17 4 12" /></svg
-            >Ajouter
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Ajouter
           </button>
         </div>
       </div>
@@ -1078,12 +1195,12 @@
           <input type="hidden" id="edit-code-orig" />
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Code UE *</label
-              ><input type="text" class="form-input" id="edit-code" />
+              <label class="form-label">Code UE *</label>
+              <input type="text" class="form-input" id="edit-code" />
             </div>
             <div class="form-group">
-              <label class="form-label">Cr&eacute;dits</label
-              ><input
+              <label class="form-label">Crédits</label>
+              <input
                 type="number"
                 class="form-input"
                 id="edit-credits"
@@ -1093,47 +1210,27 @@
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Intitul&eacute; *</label
-            ><input type="text" class="form-input" id="edit-name" />
+            <label class="form-label">Intitulé *</label>
+            <input type="text" class="form-input" id="edit-name" />
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Professeur</label
-              ><input type="text" class="form-input" id="edit-prof" />
+              <label class="form-label">Professeur</label>
+              <input type="text" class="form-input" id="edit-prof" />
             </div>
             <div class="form-group">
-              <label class="form-label">Salle</label
-              ><input type="text" class="form-input" id="edit-salle" />
+              <label class="form-label">Salle</label>
+              <input type="text" class="form-input" id="edit-salle" />
             </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Jour</label
-              ><select class="form-select" id="edit-jour">
-                <option value="">-- Aucun --</option>
-                <option>Lundi</option>
-                <option>Mardi</option>
-                <option>Mercredi</option>
-                <option>Jeudi</option>
-                <option>Vendredi</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Heure d&eacute;but</label
-              ><input type="time" class="form-input" id="edit-start" />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Heure fin</label
-              ><input type="time" class="form-input" id="edit-end" />
-            </div>
-            <div class="form-group"></div>
           </div>
           <div class="form-group">
             <label class="form-label">Couleur</label>
             <div class="color-picker" id="edit-color-picker"></div>
             <input type="hidden" id="edit-color-val" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Créneaux horaires</label>
+            <div id="edit-schedules-wrap"></div>
           </div>
         </div>
         <div class="modal-footer">
@@ -1146,7 +1243,41 @@
         </div>
       </div>
     </div>
-
+    <!-- MODAL : Visionneuse de documents -->
+    <div class="doc-viewer-overlay" id="docViewerOverlay">
+      <div class="doc-viewer-topbar">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="var(--green)"
+          stroke-width="2"
+          stroke-linecap="round"
+        >
+          <path
+            d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+          />
+          <polyline points="14 2 14 8 20 8" />
+        </svg>
+        <span class="doc-viewer-title" id="docViewerTitle">Document</span>
+        <button class="btn btn-ghost btn-sm" onclick="Learn.closeViewer()">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+          Fermer
+        </button>
+      </div>
+      <div class="doc-viewer-body" id="docViewerBody"></div>
+    </div>
     <script type="module" src="src/js/main.js"></script>
   </body>
 </html>
