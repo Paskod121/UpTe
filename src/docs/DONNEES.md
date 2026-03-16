@@ -1,112 +1,101 @@
-# Modèle de données
-
-Ce document décrit les données utilisées par UpTe : unités d’enseignement (cours), sessions de révision, et persistance dans le navigateur.
+# Modèle de données — UpTe
 
 ---
 
-## 1. Données des cours (UE)
+## 1. Cours (UE)
 
-Source : **fichier** `src/js/constants.js`, constante **`COURSES_DATA`**.
-
-;
-
-### 1.1 Structure d’un cours
-
-Chaque élément de `COURSES_DATA` est un objet avec les champs suivants :
-
-| Champ | Type | Description |
-|-------|------|-------------|
-| `code` | `string` | Code de l’UE (ex. `INF1427`, `UE_LIBRE`). Identifiant unique. |
-| `name` | `string` | Intitulé de l’UE. |
-| `credits` | `number` | Nombre de crédits ECTS (2, 3 ou 4). |
-| `prof` | `string` | Nom du professeur (peut être `""`). |
-| `salle` | `string` | Salle ou lieu (peut être `""`). |
-| `jour` | `string \| null` | Jour de la semaine en français (`"Lundi"` … `"Vendredi"`) ou `null` si non défini. |
-| `start` | `string \| null` | Heure de début au format `"HH:MM"` (ex. `"07:30"`) ou `null`. |
-| `end` | `string \| null` | Heure de fin au format `"HH:MM"` ou `null`. |
-| `color` | `string` | Couleur hexadécimale pour affichage (badges, barres, etc.). |
-
-### 1.2 Exemple
+Définis dans `src/js/constants.js` (données par défaut) ou dans `localStorage` sous la clé `upte_courses` (données personnalisées).
 
 ```js
 {
-  code: "INF1428",
-  name: "Modélisation UML",
-  credits: 3,
-  prof: "M. HOETOWOU",
-  salle: "Salle N°2 Amphi Ampah Johnson",
-  jour: "Mardi",
-  start: "10:30",
-  end: "13:30",
-  color: "#16a34a"
+  code:    "INF1427",       // string — identifiant unique, format A-Z0-9_ 2–12 chars
+  name:    "Structure de Données", // string — 3 à 80 caractères
+  credits: 3,               // number — entier 1–10
+  prof:    "M. DUPONT",     // string — peut être vide
+  salle:   "Amphi A",       // string — peut être vide
+  jour:    "Lundi",         // string | null — jour de la semaine ou null si non défini
+  start:   "08:00",         // string | null — format HH:MM, requis si jour défini
+  end:     "10:00",         // string | null — format HH:MM, requis si jour défini, > start
+  color: {
+    green: "#22c55e",       // hex — couleur thème vert
+    blue:  "#38bdf8",       // hex — couleur thème bleu
+    light: "#15803d",       // hex — couleur thème clair
+  }
 }
 ```
 
-### 1.3 Constantes associées
+Les cours ajoutés manuellement ont `color: { green: hex, blue: hex, light: hex }` avec le même hex pour les trois thèmes.
 
-- **`DAYS`** : `["Dimanche", "Lundi", … , "Samedi"]` — ordre pour `Date.getDay()`.
-- **`DAYS_SHORT`** : abréviations éventuelles.
-- **`MONTHS`** : noms des mois en français pour l’affichage des dates.
+`getActiveCourses()` dans `utils.js` retourne les cours custom si `upte_courses` existe dans localStorage, sinon `COURSES_DATA`.
 
 ---
 
 ## 2. Sessions de révision
 
-Les sessions sont des **données utilisateur** : planification personnelle, créée/modifiée/supprimée dans l’application.
+Clé localStorage : `gl_s4_planner_v2` — objet `{ sessions: Session[] }`.
 
-### 2.1 Structure d’une session
+```js
+{
+  id:         "lxk2f3abc",  // string — identifiant unique base36
+  courseCode: "INF1427",    // string — référence au code d'un cours
+  date:       "2025-11-03", // string — format YYYY-MM-DD
+  duration:   2,            // number — heures, 0.5 à 12
+  startTime:  "08:00",      // string — format HH:MM, peut être vide
+  type:       "revision",   // string — clé de TYPE_LABELS
+  notes:      "Chapitre 3", // string — peut être vide
+}
+```
 
-Chaque session est un objet avec les champs suivants :
-
-| Champ | Type | Description |
-|-------|------|-------------|
-| `id` | `string` | Identifiant unique (généré par `utils.uniqueId()`). |
-| `courseCode` | `string` | Code de l’UE concernée (référence à `COURSES_DATA`). |
-| `date` | `string` | Date au format `YYYY-MM-DD`. |
-| `duration` | `number` | Durée en heures (ex. 1.5, 2). |
-| `startTime` | `string` | Heure de début optionnelle (`"HH:MM"` ou `""`). |
-| `type` | `string` | Type : `revision`, `exercices`, `lecture`, `projet`, `tp`. |
-| `notes` | `string` | Notes libres (optionnel). |
-
-### 2.2 Types de session
-
-Définis dans `constants.js` :
-
-- **`TYPE_LABELS`** : libellés affichés (Révision, Exercices, Lecture, Projet, TP).
-- **`TYPE_COLORS`** : couleurs d’affichage associées (hex).
-
-Ajout d’un nouveau type : ajouter la clé dans `TYPE_COLORS` et `TYPE_LABELS`, puis l’option dans les formulaires (HTML + `app.js`).
+Types disponibles : `revision`, `exercices`, `lecture`, `projet`, `tp`.
 
 ---
 
-## 3. Persistance (localStorage)
+## 3. Paramètres établissement
 
-- **Clé** : `gl_s4_planner_v2` (définie dans `Storage.KEY`).
-- **Format** : un seul objet JSON `{ "sessions": [ ... ] }`. Les cours ne sont pas stockés, ils viennent de `COURSES_DATA`.
+Clé localStorage : `upte_settings`.
 
-### 3.1 API Storage (src/js/storage.js)
+```js
+{
+  universite: "UNIVERSITÉ DE LOMÉ",  // string — requis, max 60 chars
+  ecole:      "EPL",                  // string — requis, max 60 chars
+  parcours:   "Licence Pro GL",       // string — requis, max 60 chars
+  semestre:   "Semestre 4",           // string — requis, max 30 chars
+}
+```
 
-| Méthode | Description |
-|---------|-------------|
-| `Storage.get()` | Retourne `{ sessions: [] }` ou l’objet parsé depuis localStorage. |
-| `Storage.set(data)` | Enregistre l’objet en JSON. |
-| `Storage.getSessions()` | Retourne le tableau `sessions`. |
-| `Storage.saveSessions(s)` | Met à jour `sessions` et appelle `set`. |
-
-En cas d’erreur (parse, quota), `get()` renvoie `{ sessions: [] }` et `set()` ignore l’erreur.
-
----
-
-## 4. Résumé des sources de données
-
-| Donnée | Source | Modifiable par l’app |
-|--------|--------|----------------------|
-| Liste des UE, horaires, profs, salles | `COURSES_DATA` (constants.js) | Non |
-| Jours, mois, types de session | `constants.js` | Non |
-| Sessions de révision | localStorage (`gl_s4_planner_v2`) | Oui (CRUD) |
-
-Pour **changer les cours** (nouveau semestre, autre formation), il suffit d’éditer `COURSES_DATA` dans `src/js/constants.js` et, si besoin, d’adapter les libellés (ex. « Semestre 4 ») dans le HTML ou les textes d’interface.
+Valeurs par défaut définies dans `Storage.DEFAULT_SETTINGS`. Si la clé n'existe pas, les valeurs par défaut sont utilisées.
 
 ---
 
-*Voir [DEVELOPPEMENT.md](./DEVELOPPEMENT.md) pour les procédures de modification (cours, pages, types de session).*
+## 4. Thème
+
+Clé localStorage : `upte_theme`.
+
+Valeurs possibles : `"light"` (défaut), `"blue"`, `"green"`.
+
+---
+
+## 5. Règles de validation
+
+Toutes les règles sont dans `src/js/validator.js`. Résumé :
+
+| Champ | Règle |
+|---|---|
+| `code` cours | `A-Z0-9_`, 2–12 caractères, unique |
+| `name` cours | 3–80 caractères |
+| `credits` | Entier 1–10 |
+| `jour` + `start` + `end` | Si `jour` défini, `start` et `end` requis. `end` > `start`. Durée max 8h. |
+| `duration` session | 0.5–12 heures |
+| `date` session | Format valide, requis |
+| `startTime` session | Format HH:MM, session ne dépasse pas minuit |
+
+---
+
+## 6. Clés localStorage — récapitulatif
+
+| Clé | Contenu | Suppression |
+|---|---|---|
+| `gl_s4_planner_v2` | Sessions de révision | Manuel ou `Storage.saveSessions([])` |
+| `upte_settings` | Paramètres établissement | `Storage.saveSettings(DEFAULT)` |
+| `upte_courses` | Cours personnalisés | `Storage.resetCourses()` — revient aux données par défaut |
+| `upte_theme` | Thème actif | `localStorage.removeItem("upte_theme")` |

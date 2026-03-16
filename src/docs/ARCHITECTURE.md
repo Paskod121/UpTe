@@ -19,168 +19,143 @@ UpTe/
     │   ├── variables.css   custom properties (:root) et thèmes (data-theme)
     │   ├── layout.css      structure globale : sidebar, topbar, grilles, responsive
     │   ├── components.css  composants : cards, slots, modales, formulaires, toasts, tips
-    │   └── utilities.css   boutons, tags, animations, classes helpers
+    │   └── utilities.css   boutons, tags, animations, helpers, settings, color picker
     ├── js/
     │   ├── main.js         point d'entrée — expose App/UI sur window, lance init
     │   ├── constants.js    données statiques : DAYS, MONTHS, COURSES_DATA, TYPE_*
-    │   ├── storage.js      persistance localStorage (classe Storage)
-    │   ├── utils.js        fonctions utilitaires pures (timeToMin, esc, formatDate…)
+    │   ├── storage.js      persistance localStorage (sessions, settings, cours custom)
+    │   ├── utils.js        fonctions utilitaires pures
+    │   ├── validator.js    validation centralisée de tous les formulaires
     │   ├── ui.js           interface : navigation, thème, modales, toasts, calendrier, tips
-    │   └── app.js          logique métier : dashboard, emploi du temps, planificateur
-    ├── fonts/              polices locales (usage hors ligne)
-    ├── images/             logos, icônes, visuels
-    ├── videos/             réservé
+    │   └── app.js          logique métier : dashboard, emploi du temps, planificateur, settings
+    ├── fonts/
+    ├── images/
+    ├── videos/
     └── docs/
-        ├── README.md
-        ├── ARCHITECTURE.md (ce fichier)
-        ├── DEVELOPPEMENT.md
-        └── DONNEES.md
 ```
 
 ---
 
 ## CSS — organisation modulaire
 
-`index.html` charge un seul fichier : `src/css/main.css`. Ce fichier ne contient que quatre `@import` dans l'ordre :
-
-```css
-@import "./variables.css";
-@import "./layout.css";
-@import "./components.css";
-@import "./utilities.css";
-```
-
-L'ordre est intentionnel : les variables doivent être déclarées avant d'être utilisées dans les autres fichiers.
-
 | Fichier | Contenu | Modifier quand |
 |---|---|---|
-| `variables.css` | `:root`, `[data-theme="blue"]` | Ajout d'une couleur, d'un thème |
-| `layout.css` | Sidebar, topbar, grilles de pages, responsive structure | Changement de mise en page globale |
-| `components.css` | Cards, slots, modales, formulaires, toasts, tips, sessions | Modification d'un composant existant |
-| `utilities.css` | Boutons, tags, animations, helpers | Ajout d'un utilitaire, d'une animation |
+| `variables.css` | `:root`, `[data-theme="blue"]`, `[data-theme="light"]` | Ajout couleur ou thème |
+| `layout.css` | Sidebar, topbar, grilles, responsive | Changement de mise en page |
+| `components.css` | Cards, slots, modales, formulaires, toasts, validation | Modification composant |
+| `utilities.css` | Boutons, tags, animations, helpers, settings, color picker | Ajout utilitaire |
 
 ---
 
 ## Modules JavaScript
 
-Le code JS est découpé en six fichiers ES modules. `main.js` est le seul point d'entrée ; les autres ne sont jamais chargés directement par `index.html`.
-
 ### `constants.js`
 
-Données statiques. Aucune logique, aucun import externe.
-
-- `DAYS`, `DAYS_SHORT`, `MONTHS` — tableaux de labels localisés
-- `COURSES_DATA` — tableau des 11 UE du GL-S4 avec code, nom, crédits, prof, salle, jour, start, end, color
-- `TYPE_COLORS`, `TYPE_LABELS` — maps clé→valeur pour les types de sessions
+- `COURSES_DATA` — 11 UE avec triple palette `{ green, blue, light }`
+- `TYPE_COLORS` — `{ green, blue, light }` par type de session
+- `DAYS`, `MONTHS`, `TYPE_LABELS`
 
 ### `storage.js`
 
-Classe `Storage`. Un seul rôle : lire et écrire dans `localStorage`.
+Trois clés localStorage :
 
 ```
-Storage.getSessions()      → Session[]
-Storage.saveSessions(arr)  → void
-Storage.get()              → { sessions: [] }
-Storage.set(data)          → void
+gl_s4_planner_v2    sessions de révision
+upte_settings       paramètres établissement
+upte_courses        cours personnalisés (null = COURSES_DATA par défaut)
 ```
 
-Clé utilisée : `gl_s4_planner_v2`. Changer cette clé repart d'un localStorage vide.
+Méthodes : `getSessions`, `saveSessions`, `getSettings`, `saveSettings`, `getCustomCourses`, `saveCustomCourses`, `resetCourses`.
 
 ### `utils.js`
 
-Fonctions pures sans état, sans effet de bord.
+```
+timeToMin / minToTime / formatDate / todayStr / uniqueId / esc
+getActiveCourses()     → cours custom si définis, sinon COURSES_DATA
+courseByCode(code)     → cherche dans getActiveCourses()
+getTheme()             → "green" | "blue" | "light"
+courseColor(course)    → hex selon thème actif
+typeColor(typeColors)  → hex selon thème actif
+```
+
+### `validator.js`
+
+Validation centralisée. Toutes les règles métier sont ici, pas dans `app.js`.
 
 ```
-timeToMin(t)          "14:30" → 870
-minToTime(m)          870 → "14:30"
-formatDate(d)         "2025-11-03" → "Lundi 3 Novembre"
-todayStr()            → "2025-11-03"
-uniqueId()            → identifiant unique (base36)
-esc(s)                → chaîne HTML-escapée
-courseByCode(code)    → objet UE ou undefined
+validateStudySession(data, prefix)              → boolean
+validateCourse(data, prefix, origCode, courses) → boolean
+validateSettings(data)                          → boolean
+setFieldError(fieldId, msg)                     → affiche erreur sous le champ
+clearErrors(fieldIds)                           → efface les erreurs
 ```
+
+Règles :
+
+| Formulaire | Règles principales |
+|---|---|
+| Session | Cours requis, date valide, durée 0.5–12h, heure valide |
+| Cours | Code `A-Z0-9_` 2–12 chars, pas de doublon, nom 3–80 chars, crédits 1–10, cohérence jour/start/end, end > start, max 8h |
+| Paramètres | Tous champs requis, limites de longueur |
 
 ### `ui.js`
 
-Classe `UI`. Gère tout ce qui est visuel sans toucher aux données métier.
+- Navigation, thèmes (`cycleTheme`, `applyTheme`, `_rerenderAll`)
+- Modales, confirmation `Promise<boolean>`, toasts
+- Mini-calendrier, conseils de révision
 
-Responsabilités :
-- Navigation entre pages (`.page.active`)
-- Gestion des thèmes (`cycleTheme`, `applyTheme`, `getStoredTheme`)
-- Ouverture/fermeture des modales
-- Modale de confirmation (remplace `confirm()` natif) — retourne une `Promise<boolean>`
-- Toasts
-- Mini-calendrier du planificateur
-- Rendu des conseils de révision
+Cycle des thèmes : `light` → `blue` → `green`. Thème par défaut : `light`.
 
-Thèmes disponibles : `green` (défaut), `blue`. Stocké dans `localStorage` sous la clé `upte_theme`.
+`_rerenderAll()` — re-rend tous les composants avec couleurs inline après changement de thème.
 
 ### `app.js`
 
-Classe `App`. Logique métier et rendu des données.
+Logique métier complète :
 
-Responsabilités :
-- `init()` — initialisation générale au chargement
-- `renderDashboard()` — cours du jour, sessions à venir, stats
-- `renderCourseList()` — liste des UE
-- `renderScheduleList()` — emploi du temps par jour
-- `renderWeekGrid()` — vue semaine visuelle
-- `renderPlanner()` — sessions planifiées + stats par UE
-- `showCourseDetail(code)` — modale détail d'une UE
-- `saveStudySession()` / `updateStudySession()` / `deleteSession()` — CRUD sessions
-
-### `main.js`
-
-Point d'entrée. Trois lignes utiles :
-
-```js
-window.App = App;
-window.UI = UI;
-document.addEventListener("DOMContentLoaded", () => {
-  UI.applyTheme(UI.getStoredTheme());
-  App.init();
-});
-```
-
-`App` et `UI` sont exposés sur `window` parce que le HTML appelle directement `App.xxx()` et `UI.xxx()` dans les attributs `onclick`.
+- Dashboard, emploi du temps, liste cours, planificateur
+- Settings : `renderSettings`, `saveSettings`
+- CRUD cours : `openAddCourse`, `openEditCourse`, `saveCourse`, `updateCourse`, `deleteCourse`, `resetCourses`
+- `openAddStudyForCourse(code)` — pré-sélectionne le cours dans la modale session
+- CRUD sessions : `saveStudySession`, `openEditSession`, `updateStudySession`, `deleteSession`
+- `_afterCoursesChange()` — re-synchronise selects + rendu global après CRUD cours
+- `_courseFromForm(prefix)` — lit formulaire cours → objet structuré avec `color: { green, blue, light }`
 
 ---
 
 ## Flux de données
 
 ```
-COURSES_DATA (constants.js)
-      ↓
-App.render*()          lit les données statiques + Storage.getSessions()
-      ↓
-DOM                    innerHTML, classList, textContent
-      ↑
-Interactions           onclick dans index.html → App.xxx() / UI.xxx()
-      ↓
-Storage.saveSessions() écrit dans localStorage
-      ↓
-App.renderDashboard() / renderPlanner()   re-rendu partiel
+getActiveCourses() → cours custom ou COURSES_DATA
+        ↓
+App.render*() — lit sessions + settings depuis Storage
+        ↓
+DOM (innerHTML, style inline)
+        ↑
+onclick → App.xxx() / UI.xxx()
+        ↓
+validator.js → boolean + affichage erreurs
+        ↓ si valide
+Storage.save*() → localStorage
+        ↓
+re-rendu ciblé
 ```
-
-Pas de state global réactif. Chaque action déclenche un re-rendu ciblé de la section concernée.
 
 ---
 
-## Thèmes
+## Palettes couleurs
 
-Les thèmes sont implémentés via un attribut `data-theme` sur `<html>`. Le CSS déclare les surcharges dans `variables.css` :
+```js
+// constants.js
+color: { green: "#22c55e", blue: "#38bdf8", light: "#15803d" }
 
-```css
-[data-theme="blue"] {
-  --green: #7dd3fc;
-  /* … */
-}
+// utils.js
+courseColor(c) // lit c.color[getTheme()]
 ```
 
-Ajouter un thème : déclarer un nouveau bloc `[data-theme="xxx"]` dans `variables.css`, ajouter l'entrée dans le tableau `THEMES` de `ui.js`.
+Cours ajoutés manuellement : `{ green: hex, blue: hex, light: hex }` — même hex pour les trois thèmes.
 
 ---
 
 ## PWA
 
-`manifest.json` à la racine déclare l'application comme installable. `index.html` contient les meta tags nécessaires (`theme-color`, `apple-mobile-web-app-capable`). Pas de service worker pour l'instant — les données restent dans `localStorage`, pas de cache offline géré côté SW.
+`manifest.json` à la racine. `theme-color` mis à jour dynamiquement par `applyTheme()`. Pas de service worker.

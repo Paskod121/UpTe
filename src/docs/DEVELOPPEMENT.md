@@ -1,29 +1,22 @@
 # Guide de développement
 
-Ce document décrit comment faire évoluer UpTe : conventions, ajout de pages ou de fonctionnalités, modification des données, et déploiement.
-
 ---
 
 ## 1. Environnement
 
-- **Éditeur** : au choix (VS Code, Cursor, etc.).
-- **Serveur local** : nécessaire pour charger les modules ES (pas d'ouverture directe en `file://`).
-  - Depuis la **racine du projet** (où se trouve `index.html`) :
-    - **Node** : `npx serve .`
-    - **Python 3** : `python -m http.server 8080`
-  - Ouvrir l'URL indiquée dans le navigateur.
-
-Aucune dépendance npm, aucun build. Le code est servi tel quel.
+- **Serveur local requis** (modules ES incompatibles avec `file://`) :
+  - Node : `npx serve .`
+  - Python 3 : `python -m http.server 8080`
+- Aucune dépendance npm, aucun build.
 
 ---
 
 ## 2. Conventions
 
-- **JavaScript** : ES modules (`import`/`export`), `"use strict"`. Les classes exposées au HTML (`App`, `UI`) sont attachées à `window` dans `main.js`.
-- **CSS** : quatre fichiers sous `src/css/`, importés par `main.css` dans l'ordre. Voir section 3.1.
-- **HTML** : une seule page `index.html`. Les « pages » sont des `<div class="page" id="page-xxx">` affichées/masquées via la navigation (classe `.active`).
-- **Chemins** : depuis la racine du projet, les assets sont sous `src/` (ex. `src/css/main.css`, `src/js/main.js`).
-- **Icônes** : SVG inline uniquement. Pas d'emoji, pas de caractères spéciaux décoratifs dans le rendu visible.
+- **JS** : ES modules (`import`/`export`), `"use strict"`. `App` et `UI` exposés sur `window` dans `main.js`.
+- **Validation** : toutes les règles métier dans `validator.js`. `app.js` appelle les fonctions du validator, n'implémente pas de règles directement.
+- **Couleurs** : jamais de hex en dur dans le CSS ni dans le JS de rendu — toujours via `var(--xxx)` ou `courseColor()` / `typeColor()`.
+- **Icônes** : SVG inline uniquement. Pas d'emoji ni de caractères spéciaux décoratifs.
 
 ---
 
@@ -31,93 +24,64 @@ Aucune dépendance npm, aucun build. Le code est servi tel quel.
 
 ### 3.1 Modifier le CSS
 
-Le CSS est découpé en quatre fichiers. `index.html` charge uniquement `src/css/main.css`, qui ne contient que les imports.
-
 | Fichier | Modifier quand |
 |---|---|
 | `variables.css` | Changer une couleur, ajouter un thème |
-| `layout.css` | Modifier la sidebar, le topbar, les grilles de pages, le responsive |
-| `components.css` | Modifier un composant : card, slot, modale, formulaire, toast, tip |
-| `utilities.css` | Ajouter un bouton, un tag, une animation, un helper |
+| `layout.css` | Sidebar, topbar, grilles, responsive |
+| `components.css` | Composant existant : card, slot, modale, formulaire, toast |
+| `utilities.css` | Bouton, tag, animation, helper, settings, color picker |
 
-Ne jamais écrire de styles directement dans `main.css` — ce fichier ne contient que les `@import`.
+Ne jamais écrire de styles dans `main.css`.
 
-**Ajouter un thème** :
+**Ajouter un thème :**
 
-1. Déclarer un bloc dans `variables.css` :
-   ```css
-   [data-theme="mon-theme"] {
-     --green: #xxx;
-     --green2: #xxx;
-     /* surcharger les variables nécessaires */
-   }
-   ```
-2. Ajouter l'entrée dans le tableau `THEMES` de `src/js/ui.js` :
-   ```js
-   const THEMES = [
-     { id: "green", label: "Vert" },
-     { id: "blue", label: "Bleu" },
-     { id: "mon-theme", label: "Mon thème" },
-   ];
-   ```
+1. `variables.css` — ajouter `[data-theme="mon-theme"] { ... }`
+2. `ui.js` — ajouter dans `THEMES` : `{ id: "mon-theme", label: "Mon thème" }`
+3. `ui.js` — ajouter dans `THEME_META` : `"mon-theme": "#xxxxxx"`
+4. `constants.js` — ajouter la clé dans `color` de chaque cours et dans `TYPE_COLORS`
+5. `utils.js` — `getTheme()` : ajouter le cas `if (t === "mon-theme") return "mon-theme"`
 
-### 3.2 Changer les données de cours (UE)
+### 3.2 Modifier les données de cours
 
-1. Ouvrir **`src/js/constants.js`**.
-2. Modifier le tableau **`COURSES_DATA`** selon le schéma décrit dans [DONNEES.md](./DONNEES.md).
-3. Si le semestre ou la formation change, adapter les textes dans **`index.html`** (ex. « Licence Pro GL · Semestre 4 »).
+Éditer `src/js/constants.js`, tableau `COURSES_DATA`. Schéma complet dans `src/docs/DONNEES.md`.
+
+Les utilisateurs peuvent aussi modifier leurs cours directement depuis la page Paramètres — ces modifications sont stockées dans `localStorage` (`upte_courses`) et prennent le dessus sur `COURSES_DATA`.
 
 ### 3.3 Ajouter une page
 
-1. **HTML** (`index.html`) — ajouter le bloc de page et l'item de menu :
-   ```html
-   <div class="page" id="page-ma-page">
-     <!-- contenu -->
-   </div>
-   ```
-   ```html
-   <div class="nav-item" onclick="UI.navigate('ma-page')">… Libellé …</div>
-   ```
+1. `index.html` — ajouter `<div class="page" id="page-ma-page">` et le `nav-item`
+2. `ui.js` — ajouter dans `titles` de `navigate()` et le cas de rendu
+3. `app.js` — implémenter `renderMaPage()` si nécessaire
 
-2. **Navigation** (`src/js/ui.js`) — ajouter le titre dans `navigate()` :
-   ```js
-   const titles = {
-     // ...
-     "ma-page": "Mon titre",
-   };
-   ```
-   Si la page déclenche un rendu au chargement :
-   ```js
-   if (page === "ma-page") window.App.renderMaPage();
-   ```
+### 3.4 Ajouter un type de session
 
-3. **Rendu** (`src/js/app.js`) — implémenter `renderMaPage()` si nécessaire.
+1. `constants.js` — ajouter dans `TYPE_COLORS` (avec les 3 clés `green/blue/light`) et `TYPE_LABELS`
+2. `index.html` — ajouter `<option>` dans les deux selects de type (modales Ajouter et Modifier)
 
-### 3.4 Ajouter un type de session de révision
+### 3.5 Ajouter une règle de validation
 
-1. `src/js/constants.js` — ajouter dans `TYPE_COLORS` et `TYPE_LABELS`.
-2. `index.html` — ajouter l'`<option>` dans les deux `<select>` de type (modales Ajouter et Modifier).
+Ouvrir `src/js/validator.js`. Chaque formulaire a sa fonction dédiée. Ajouter la règle dans la fonction concernée — elle utilisera `setFieldError(fieldId, message)` pour afficher l'erreur sous le champ.
 
-### 3.5 Ajouter une image, une vidéo, une police
+### 3.6 Ajouter une image, vidéo, police
 
-- **Images** : `src/images/`, référencer par `src="src/images/fichier.ext"`.
-- **Vidéos** : `src/videos/`.
-- **Polices** : `src/fonts/`. Déclarer avec `@font-face` dans `variables.css`. Pour un mode 100 % hors ligne, retirer l'import Google Fonts dans `index.html`.
+- Images : `src/images/`
+- Vidéos : `src/videos/`
+- Polices : `src/fonts/` + `@font-face` dans `variables.css`
 
 ---
 
 ## 4. Fichiers à ne pas casser
 
-- **`index.html`** : ne pas renommer. Les chemins `src/css/main.css` et `src/js/main.js` doivent rester valides depuis la racine.
-- **`src/css/main.css`** : ne contient que les `@import`. L'ordre doit rester : variables → layout → components → utilities.
-- **`src/js/main.js`** : point d'entrée unique JS. Expose `App` et `UI` sur `window`, appelle `App.init()`.
-- **`Storage.KEY`** : si la clé change, les données existantes des utilisateurs ne sont plus lues (nouveau départ).
+- `index.html` — ne pas renommer. Chemins `src/css/main.css` et `src/js/main.js` fixes.
+- `src/css/main.css` — uniquement les `@import`, dans l'ordre : variables → layout → components → utilities.
+- `src/js/main.js` — point d'entrée unique JS.
+- `Storage.KEY` (`gl_s4_planner_v2`) — changer cette clé repart d'un localStorage vide pour les sessions.
 
 ---
 
 ## 5. Déploiement
 
-Copier l'intégralité du projet (racine + `src/`) sur un hébergeur statique (Netlify, GitHub Pages, hébergement classique). La racine du site doit contenir `index.html` et le dossier `src/` avec les mêmes chemins relatifs. Aucun build requis.
+Copier la racine + `src/` sur un hébergeur statique (Netlify, GitHub Pages). Aucun build requis.
 
 ---
 
@@ -125,13 +89,9 @@ Copier l'intégralité du projet (racine + `src/`) sur un hébergeur statique (N
 
 Après une modification importante :
 
-1. **`ARCHITECTURE.md`** — si la structure des fichiers ou des modules change.
-2. **`DONNEES.md`** — si le modèle de données change.
-3. **`DEVELOPPEMENT.md`** (ce fichier) — si les conventions ou procédures changent.
-4. **`src/docs/README.md`** — si un nouveau document est ajouté.
-5. **`README.md`** racine — si l'utilisation ou la structure globale change.
-6. **`CHANGELOG.md`** — ajouter une entrée pour chaque modification notable.
-
----
-
-*Pour le modèle de données, voir [DONNEES.md](./DONNEES.md). Pour l'architecture technique, voir [ARCHITECTURE.md](./ARCHITECTURE.md).*
+1. `ARCHITECTURE.md` — si structure ou modules changent
+2. `DONNEES.md` — si modèle de données change
+3. `DEVELOPPEMENT.md` — si conventions ou procédures changent
+4. `src/docs/README.md` — si nouveau document ajouté
+5. `README.md` racine — si utilisation ou structure globale change
+6. `CHANGELOG.md` — entrée pour chaque modification notable
