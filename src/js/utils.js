@@ -37,27 +37,40 @@ export function courseByCode(code) {
   return COURSES_DATA.find((c) => c.code === code);
 }
 
+/**
+ * Retourne le thème actif : "green" | "blue" | "light"
+ */
 export function getTheme() {
   try {
     const t = localStorage.getItem("upte_theme");
-    return t === "blue" ? "blue" : "green";
+    if (t === "blue")  return "blue";
+    if (t === "light") return "light";
+    return "green";
   } catch {
     return "green";
   }
 }
 
+/**
+ * Retourne la couleur d'un cours selon le thème actif.
+ */
 export function courseColor(course) {
-  if (!course) return "#4ade80";
+  if (!course) return "#16a34a";
   const t = getTheme();
-  return typeof course.color === "object"
-    ? (course.color[t] ?? course.color.green)
-    : course.color;
+  if (typeof course.color === "object") {
+    return course.color[t] ?? course.color.green;
+  }
+  return course.color;
 }
 
+/**
+ * Retourne la couleur d'un type de session selon le thème actif.
+ */
 export function typeColor(typeColors) {
-  if (!typeColors) return "#4ade80";
+  if (!typeColors) return "#16a34a";
   const t = getTheme();
-  return typeof typeColors === "object"
-    ? (typeColors[t] ?? typeColors.green)
-    : typeColors;
+  if (typeof typeColors === "object") {
+    return typeColors[t] ?? typeColors.green;
+  }
+  return typeColors;
 }
