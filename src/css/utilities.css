@@ -580,8 +580,8 @@
 
 .schedule-row-inner {
   display: grid;
-  grid-template-columns: 1fr 90px 20px 90px 32px;
-  align-items: center;
+  grid-template-columns: 160px 1fr 20px 1fr 32px;
+  align-items: start;
   gap: 8px;
 }
 
@@ -641,4 +641,108 @@
   .schedule-sep {
     display: none;
   }
+}
+
+/* ─── Combobox custom (remplace datalist) ─── */
+.combo-wrap {
+  position: relative;
+}
+
+.combo-input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 36px 10px 14px;
+  color: var(--text);
+  font-family: "DM Sans", sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: border .2s, box-shadow .2s;
+  cursor: text;
+}
+
+.combo-input:focus {
+  border-color: var(--green3);
+  box-shadow: 0 0 0 3px var(--green-dim);
+}
+
+.combo-chevron {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  pointer-events: none;
+  transition: transform .2s;
+}
+
+.combo-wrap.open .combo-chevron {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.combo-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+  z-index: 150;
+  overflow: hidden;
+  display: none;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.combo-wrap.open .combo-dropdown {
+  display: block;
+}
+
+.combo-option {
+  padding: 9px 14px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background .15s;
+}
+
+.combo-option:hover,
+.combo-option.highlighted {
+  background: var(--green-dim);
+  color: var(--green);
+}
+
+.combo-option.no-results {
+  color: var(--muted);
+  cursor: default;
+  font-style: italic;
+}
+
+.combo-option.no-results:hover {
+  background: transparent;
+  color: var(--muted);
+}
+
+/* ─── Theme switcher toast ─── */
+.theme-preview-dots {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+.tpd {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  transition: all .2s;
+}
+.tpd[data-theme="light"] { background: #f4f6f3; }
+.tpd[data-theme="blue"]  { background: #0ea5e9; }
+.tpd[data-theme="green"] { background: #16a34a; }
+.tpd.active {
+  transform: scale(1.4);
+  border-color: var(--green);
 }

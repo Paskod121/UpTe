@@ -15,7 +15,6 @@
     <meta name="apple-mobile-web-app-title" content="UpTe" />
     <title>UpTe ● Planificateur de revision</title>
 
-    <!-- Open Graph — prévisualisation WhatsApp, Discord, réseaux -->
     <meta property="og:title" content="Up●Te" />
     <meta
       property="og:description"
@@ -28,8 +27,6 @@
     <meta property="og:url" content="https://up-te.vercel.app" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Up●Te" />
-
-    <!-- Twitter/X -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Up●Te" />
     <meta
@@ -187,7 +184,6 @@
             </svg>
             Apprentissage
           </div>
-
           <div class="nav-item" onclick="UI.navigate('notes')">
             <svg
               width="16"
@@ -209,7 +205,6 @@
             </svg>
             Prise de notes
           </div>
-
           <div class="nav-item" onclick="UI.navigate('settings')">
             <svg
               width="16"
@@ -265,16 +260,16 @@
           </button>
           <div class="semester-progress">
             <div class="sp-row">
-              <span class="sp-title">Cr&eacute;dits totaux</span
-              ><span class="sp-val">27 ECTS</span>
+              <span class="sp-title">Cr&eacute;dits totaux</span>
+              <span class="sp-val" id="sidebarCredits">— ECTS</span>
             </div>
             <div class="bar-track">
               <div class="bar-fill" style="width: 0%" id="creditsBar"></div>
             </div>
             <div style="margin-top: 8px">
               <div class="sp-row">
-                <span class="sp-title">Semestre 4</span
-                ><span class="sp-val">2025&ndash;2026</span>
+                <span class="sp-title" id="sidebarSemestre">Semestre 4</span>
+                <span class="sp-val" id="sidebarAnnee">2025–2026</span>
               </div>
             </div>
           </div>
@@ -364,7 +359,7 @@
                     />
                   </svg>
                 </div>
-                <div class="stat-value">11</div>
+                <div class="stat-value" id="statTotalUE">—</div>
                 <div class="stat-label">Unit&eacute;s d'enseignement</div>
                 <div class="stat-sub neutral">
                   <svg
@@ -375,8 +370,9 @@
                     stroke="currentColor"
                     stroke-width="2"
                   >
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg
-                  >27 cr&eacute;dits
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                  </svg>
+                  <span id="statTotalCredits">—</span> cr&eacute;dits
                 </div>
               </div>
               <div class="stat-card">
@@ -492,10 +488,13 @@
                       <rect x="3" y="4" width="18" height="18" rx="2" />
                       <line x1="16" y1="2" x2="16" y2="6" />
                       <line x1="8" y1="2" x2="8" y2="6" />
-                      <line x1="3" y1="10" x2="21" y2="10" /></svg
-                    >Semaine type &mdash; GL S4
+                      <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                    Semaine type &mdash; GL S4
                   </div>
-                  <div class="tag tag-green">2025-2026</div>
+                  <div class="tag tag-green" id="scheduleYearTag">
+                    2025-2026
+                  </div>
                 </div>
                 <div class="card-body" style="padding: 12px; overflow-x: auto">
                   <div id="weekGridContainer"></div>
@@ -510,8 +509,12 @@
           <!-- COURSES -->
           <div class="page" id="page-courses">
             <div class="section-header mb-4">
-              <div class="section-title">Toutes les UE du Semestre 4</div>
-              <div class="tag tag-green">27 cr&eacute;dits total</div>
+              <div class="section-title" id="coursesPageTitle">
+                Toutes les UE
+              </div>
+              <div class="tag tag-green" id="coursesCreditsTag">
+                — cr&eacute;dits total
+              </div>
             </div>
             <div class="course-list" id="courseList"></div>
           </div>
@@ -559,8 +562,9 @@
                         <rect x="3" y="4" width="18" height="18" rx="2" />
                         <line x1="16" y1="2" x2="16" y2="6" />
                         <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" /></svg
-                      >Calendrier
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                      </svg>
+                      Calendrier
                     </div>
                   </div>
                   <div class="card-body"><div id="miniCalendar"></div></div>
@@ -581,7 +585,6 @@
           <!-- LEARN -->
           <div class="page" id="page-learn">
             <div class="learn-grid">
-              <!-- Colonne Pomodoro -->
               <div class="pomo-card">
                 <div
                   class="card-title"
@@ -603,8 +606,6 @@
                 </div>
                 <div id="pomodoroWidget"></div>
               </div>
-
-              <!-- Colonne Documents -->
               <div class="docs-card">
                 <div class="docs-card-header">
                   <div class="docs-card-title">
@@ -624,7 +625,9 @@
                     </svg>
                     Documents par UE
                   </div>
-                  <div class="tag tag-muted">PDF · DOCX · PPTX</div>
+                  <div class="tag tag-muted">
+                    PDF &middot; DOCX &middot; PPTX
+                  </div>
                 </div>
                 <div class="docs-card-body">
                   <div id="learnDocsPanel"></div>
@@ -634,9 +637,7 @@
           </div>
 
           <!-- NOTES -->
-          <div class="page" id="page-notes">
-            <div id="notesPage"></div>
-          </div>
+          <div class="page" id="page-notes"><div id="notesPage"></div></div>
 
           <!-- SETTINGS -->
           <div class="page" id="page-settings">
@@ -662,44 +663,168 @@
                 <div class="form-row">
                   <div class="form-group">
                     <label class="form-label">Universit&eacute;</label>
-                    <input
-                      type="text"
-                      class="form-input"
-                      id="set-universite"
-                      placeholder="UNIVERSIT&Eacute; DE LOM&Eacute;"
-                    />
+                    <div class="combo-wrap" id="combo-universite">
+                      <input
+                        type="text"
+                        class="combo-input"
+                        id="set-universite"
+                        placeholder="UNIVERSITÉ DE LOMÉ"
+                        autocomplete="off"
+                        oninput="Combo.filter('combo-universite')"
+                        onfocus="Combo.open('combo-universite')"
+                        onblur="Combo.blur('combo-universite')"
+                      />
+                      <svg
+                        class="combo-chevron"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                      <div
+                        class="combo-dropdown"
+                        id="combo-universite-list"
+                        data-options='["UNIVERSITÉ DE LOMÉ","UNIVERSITÉ DE KARA","UNIVERSITÉ DE PARAKOU","UNIVERSITÉ D&apos;ABOMEY-CALAVI","UNIVERSITÉ CHEIKH ANTA DIOP","UNIVERSITÉ FÉLIX HOUPHOUËT-BOIGNY","UNIVERSITÉ DE OUAGADOUGOU","UNIVERSITÉ DE YAOUNDÉ I","UNIVERSITÉ DE DAKAR","UNIVERSITÉ DE BAMAKO","UNIVERSITÉ DE NIAMEY","UNIVERSITÉ DE CONAKRY"]'
+                      ></div>
+                    </div>
                   </div>
                   <div class="form-group">
                     <label class="form-label"
                       >&Eacute;cole / Facult&eacute;</label
                     >
-                    <input
-                      type="text"
-                      class="form-input"
-                      id="set-ecole"
-                      placeholder="EPL"
-                    />
+                    <div class="combo-wrap" id="combo-ecole">
+                      <input
+                        type="text"
+                        class="combo-input"
+                        id="set-ecole"
+                        placeholder="EPL"
+                        autocomplete="off"
+                        oninput="Combo.filter('combo-ecole')"
+                        onfocus="Combo.open('combo-ecole')"
+                        onblur="Combo.blur('combo-ecole')"
+                      />
+                      <svg
+                        class="combo-chevron"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                      <div
+                        class="combo-dropdown"
+                        id="combo-ecole-list"
+                        data-options='["EPL","FASEG","FLASH","FDD","FSS","FDS","ESTBA","IUT","INFA","ENSI","ENS","FSJP","FMP","ISEPS"]'
+                      ></div>
+                    </div>
                   </div>
                 </div>
                 <div class="form-row">
                   <div class="form-group">
                     <label class="form-label">Parcours</label>
-                    <input
-                      type="text"
-                      class="form-input"
-                      id="set-parcours"
-                      placeholder="Licence Pro GL"
-                    />
+                    <div class="combo-wrap" id="combo-parcours">
+                      <input
+                        type="text"
+                        class="combo-input"
+                        id="set-parcours"
+                        placeholder="Licence Pro GL"
+                        autocomplete="off"
+                        oninput="Combo.filter('combo-parcours')"
+                        onfocus="Combo.open('combo-parcours')"
+                        onblur="Combo.blur('combo-parcours')"
+                      />
+                      <svg
+                        class="combo-chevron"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                      <div
+                        class="combo-dropdown"
+                        id="combo-parcours-list"
+                        data-options='["Licence Pro GL","Licence Pro IG","Licence Pro RT","Licence Pro GE","Licence 1","Licence 2","Licence 3","Master 1","Master 2","Doctorat","BTS Informatique","BTS Électronique","Terminale A","Terminale C","Terminale D","Seconde","Première"]'
+                      ></div>
+                    </div>
                   </div>
                   <div class="form-group">
                     <label class="form-label">Semestre</label>
-                    <input
-                      type="text"
-                      class="form-input"
-                      id="set-semestre"
-                      placeholder="Semestre 4"
-                    />
+                    <div class="combo-wrap" id="combo-semestre">
+                      <input
+                        type="text"
+                        class="combo-input"
+                        id="set-semestre"
+                        placeholder="Semestre 4"
+                        autocomplete="off"
+                        oninput="Combo.filter('combo-semestre')"
+                        onfocus="Combo.open('combo-semestre')"
+                        onblur="Combo.blur('combo-semestre')"
+                      />
+                      <svg
+                        class="combo-chevron"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                      <div
+                        class="combo-dropdown"
+                        id="combo-semestre-list"
+                        data-options='["Semestre 1","Semestre 2","Semestre 3","Semestre 4","Semestre 5","Semestre 6","Trimestre 1","Trimestre 2","Trimestre 3","Année complète"]'
+                      ></div>
+                    </div>
                   </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label"
+                      >Ann&eacute;e acad&eacute;mique</label
+                    >
+                    <div class="combo-wrap" id="combo-annee">
+                      <input
+                        type="text"
+                        class="combo-input"
+                        id="set-annee"
+                        placeholder="2025–2026"
+                        autocomplete="off"
+                        oninput="Combo.filter('combo-annee')"
+                        onfocus="Combo.open('combo-annee')"
+                        onblur="Combo.blur('combo-annee')"
+                      />
+                      <svg
+                        class="combo-chevron"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                      <div
+                        class="combo-dropdown"
+                        id="combo-annee-list"
+                        data-options='["2022–2023","2023–2024","2024–2025","2025–2026","2026–2027","2027–2028","2028–2029"]'
+                      ></div>
+                    </div>
+                  </div>
+                  <div class="form-group"></div>
                 </div>
                 <div
                   style="
@@ -837,8 +962,9 @@
               style="margin-right: 6px; vertical-align: middle"
             >
               <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" /></svg
-            >Planifier une session
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Planifier une session
           </div>
           <button class="modal-close" onclick="UI.closeModal('addStudy')">
             <svg
@@ -866,30 +992,30 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Date *</label
-              ><input type="date" class="form-input" id="studyDate" />
+              <label class="form-label">Date *</label>
+              <input type="date" class="form-input" id="studyDate" />
               <div class="form-error" id="err-studyDate">Date requise.</div>
             </div>
             <div class="form-group">
-              <label class="form-label">Dur&eacute;e (heures) *</label
-              ><input
+              <label class="form-label">Dur&eacute;e (heures) *</label>
+              <input
                 type="number"
                 class="form-input"
                 id="studyDuration"
                 min="0.5"
-                max="8"
+                max="12"
                 step="0.5"
                 placeholder="2"
               />
               <div class="form-error" id="err-studyDuration">
-                Dur&eacute;e entre 0.5 et 8h.
+                Dur&eacute;e entre 0.5 et 12h.
               </div>
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Heure d&eacute;but</label
-              ><input
+              <label class="form-label">Heure d&eacute;but</label>
+              <input
                 type="time"
                 class="form-input"
                 id="studyStartTime"
@@ -897,8 +1023,8 @@
               />
             </div>
             <div class="form-group">
-              <label class="form-label">Type</label
-              ><select class="form-select" id="studyType">
+              <label class="form-label">Type</label>
+              <select class="form-select" id="studyType">
                 <option value="revision">R&eacute;vision</option>
                 <option value="exercices">Exercices</option>
                 <option value="lecture">Lecture</option>
@@ -908,8 +1034,8 @@
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Notes (optionnel)</label
-            ><textarea
+            <label class="form-label">Notes (optionnel)</label>
+            <textarea
               class="form-textarea"
               id="studyNotes"
               placeholder="Ex: Revoir les chapitres 3 et 4..."
@@ -929,8 +1055,9 @@
               stroke="currentColor"
               stroke-width="2.5"
             >
-              <polyline points="20 6 9 17 4 12" /></svg
-            >Enregistrer
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Enregistrer
           </button>
         </div>
       </div>
@@ -958,34 +1085,34 @@
         <div class="modal-body">
           <input type="hidden" id="editSessionId" />
           <div class="form-group">
-            <label class="form-label">Unit&eacute; d'enseignement *</label
-            ><select class="form-select" id="editStudyCourse"></select>
+            <label class="form-label">Unit&eacute; d'enseignement *</label>
+            <select class="form-select" id="editStudyCourse"></select>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Date *</label
-              ><input type="date" class="form-input" id="editStudyDate" />
+              <label class="form-label">Date *</label>
+              <input type="date" class="form-input" id="editStudyDate" />
             </div>
             <div class="form-group">
-              <label class="form-label">Dur&eacute;e (heures)</label
-              ><input
+              <label class="form-label">Dur&eacute;e (heures)</label>
+              <input
                 type="number"
                 class="form-input"
                 id="editStudyDuration"
                 min="0.5"
-                max="8"
+                max="12"
                 step="0.5"
               />
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Heure d&eacute;but</label
-              ><input type="time" class="form-input" id="editStudyStartTime" />
+              <label class="form-label">Heure d&eacute;but</label>
+              <input type="time" class="form-input" id="editStudyStartTime" />
             </div>
             <div class="form-group">
-              <label class="form-label">Type</label
-              ><select class="form-select" id="editStudyType">
+              <label class="form-label">Type</label>
+              <select class="form-select" id="editStudyType">
                 <option value="revision">R&eacute;vision</option>
                 <option value="exercices">Exercices</option>
                 <option value="lecture">Lecture</option>
@@ -995,8 +1122,8 @@
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Notes</label
-            ><textarea class="form-textarea" id="editStudyNotes"></textarea>
+            <label class="form-label">Notes</label>
+            <textarea class="form-textarea" id="editStudyNotes"></textarea>
           </div>
         </div>
         <div class="modal-footer">
@@ -1035,7 +1162,7 @@
             class="btn btn-primary"
             onclick="
               UI.closeModal('courseDetail');
-              UI.openModal('addStudy');
+              App.openAddStudyForCourse(App.currentCourseCode);
             "
           >
             <svg
@@ -1047,14 +1174,14 @@
               stroke-width="2.5"
             >
               <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" /></svg
-            >Planifier une r&eacute;vision
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Planifier une r&eacute;vision
           </button>
         </div>
       </div>
     </div>
 
-    <!-- MODAL : Ajouter cours -->
     <!-- MODAL : Ajouter cours -->
     <div class="modal-overlay" id="modal-addCourse">
       <div class="modal">
@@ -1101,7 +1228,7 @@
               />
             </div>
             <div class="form-group">
-              <label class="form-label">Crédits</label>
+              <label class="form-label">Cr&eacute;dits</label>
               <input
                 type="number"
                 class="form-input"
@@ -1113,12 +1240,12 @@
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Intitulé *</label>
+            <label class="form-label">Intitul&eacute; *</label>
             <input
               type="text"
               class="form-input"
               id="add-name"
-              placeholder="Structure de Données"
+              placeholder="Structure de Donn&eacute;es"
             />
           </div>
           <div class="form-row">
@@ -1147,7 +1274,7 @@
             <input type="hidden" id="add-color-val" />
           </div>
           <div class="form-group">
-            <label class="form-label">Créneaux horaires</label>
+            <label class="form-label">Cr&eacute;neaux horaires</label>
             <div id="add-schedules-wrap"></div>
           </div>
         </div>
@@ -1199,7 +1326,7 @@
               <input type="text" class="form-input" id="edit-code" />
             </div>
             <div class="form-group">
-              <label class="form-label">Crédits</label>
+              <label class="form-label">Cr&eacute;dits</label>
               <input
                 type="number"
                 class="form-input"
@@ -1210,7 +1337,7 @@
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Intitulé *</label>
+            <label class="form-label">Intitul&eacute; *</label>
             <input type="text" class="form-input" id="edit-name" />
           </div>
           <div class="form-row">
@@ -1229,7 +1356,7 @@
             <input type="hidden" id="edit-color-val" />
           </div>
           <div class="form-group">
-            <label class="form-label">Créneaux horaires</label>
+            <label class="form-label">Cr&eacute;neaux horaires</label>
             <div id="edit-schedules-wrap"></div>
           </div>
         </div>
@@ -1243,6 +1370,7 @@
         </div>
       </div>
     </div>
+
     <!-- MODAL : Visionneuse de documents -->
     <div class="doc-viewer-overlay" id="docViewerOverlay">
       <div class="doc-viewer-topbar">
@@ -1278,6 +1406,7 @@
       </div>
       <div class="doc-viewer-body" id="docViewerBody"></div>
     </div>
+
     <script type="module" src="src/js/main.js"></script>
   </body>
 </html>

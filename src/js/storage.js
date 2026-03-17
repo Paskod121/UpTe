@@ -66,7 +66,25 @@ export class Storage {
   }
   static resetCourses() {
     try {
+      // Sauvegarde avant suppression
+      const current = localStorage.getItem(this.COURSES_KEY);
+      if (current) localStorage.setItem(this.COURSES_KEY + "_backup", current);
       localStorage.removeItem(this.COURSES_KEY);
     } catch {}
+  }
+
+  static restoreCoursesBackup() {
+    try {
+      const backup = localStorage.getItem(this.COURSES_KEY + "_backup");
+      if (!backup) return false;
+      localStorage.setItem(this.COURSES_KEY, backup);
+      localStorage.removeItem(this.COURSES_KEY + "_backup");
+      return true;
+    } catch { return false; }
+  }
+
+  static hasCoursesBackup() {
+    try { return !!localStorage.getItem(this.COURSES_KEY + "_backup"); }
+    catch { return false; }
   }
 }

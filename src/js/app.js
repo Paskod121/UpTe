@@ -75,8 +75,12 @@ export class App {
     const s = Storage.getSettings();
     const topbarSub = document.getElementById("topbarSubtitle");
     const logoSub = document.getElementById("logoSub");
+    const sidebarSem = document.getElementById("sidebarSemestre");
+    const sidebarAnnee = document.getElementById("sidebarAnnee");
     if (topbarSub) topbarSub.textContent = `${s.parcours} · ${s.semestre}`;
     if (logoSub) logoSub.textContent = `${s.ecole} · ${s.universite}`;
+    if (sidebarSem) sidebarSem.textContent = s.semestre;
+    if (sidebarAnnee) sidebarAnnee.textContent = s.annee || "2025–2026";
   }
 
   static renderSettings() {
@@ -86,6 +90,7 @@ export class App {
       "set-ecole": s.ecole,
       "set-parcours": s.parcours,
       "set-semestre": s.semestre,
+      "set-annee": s.annee || "2025–2026",
     };
     Object.entries(map).forEach(([id, val]) => {
       const el = document.getElementById(id);
@@ -100,6 +105,7 @@ export class App {
       ecole: document.getElementById("set-ecole").value.trim(),
       parcours: document.getElementById("set-parcours").value.trim(),
       semestre: document.getElementById("set-semestre").value.trim(),
+      annee: document.getElementById("set-annee")?.value.trim() || "2025–2026",
     };
     if (!validateSettings(data)) return;
     Storage.saveSettings(data);
@@ -190,11 +196,19 @@ export class App {
   }
 
   static _scheduleRowHTML(prefix, i, s = {}) {
-    const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
+    const days = [
+      "Lundi",
+      "Mardi",
+      "Mercredi",
+      "Jeudi",
+      "Vendredi",
+      "Samedi",
+      "Dimanche",
+    ];
     return `
       <div class="schedule-row" id="schedule-row-${i}">
         <div class="schedule-row-inner">
-          <select class="form-select schedule-select" id="${prefix}-jour-${i}"
+          <select class="form-select" style="font-size:13px;padding:8px 12px;height:38px" id="${prefix}-jour-${i}"
             onchange="App._updateScheduleRow(${i}, 'jour', this.value)">
             <option value="">Jour</option>
             ${days.map((d) => `<option value="${d}" ${s.jour === d ? "selected" : ""}>${d}</option>`).join("")}
@@ -367,7 +381,7 @@ export class App {
   static resetCourses() {
     UI.confirm({
       message:
-        "Remettre l'emploi du temps par défaut ? Toutes vos modifications seront perdues.",
+        "L'emploi du temps par défaut sera restauré. Vos modifications seront sauvegardées temporairement — vous aurez 30 secondes pour annuler.",
       title: "Réinitialiser",
       confirmText: "Réinitialiser",
       cancelText: "Annuler",
@@ -376,9 +390,59 @@ export class App {
     }).then((ok) => {
       if (!ok) return;
       Storage.resetCourses();
-      UI.toast("Emploi du temps réinitialisé.", "info");
       this._afterCoursesChange();
+
+      // Toast avec bouton Annuler pendant 30s
+      const tc = document.getElementById("toastContainer");
+      const el = document.createElement("div");
+      el.className = "toast success";
+      el.style.minWidth = "320px";
+      el.innerHTML = `
+      <span class="toast-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </span>
+      <span style="flex:1">Réinitialisé. <strong id="undoCountdown">30</strong>s pour annuler.</span>
+      <button class="btn btn-ghost btn-sm" style="margin-left:8px;flex-shrink:0"
+        onclick="App._undoReset(this.closest('.toast'))">
+        Annuler
+      </button>`;
+      tc.appendChild(el);
+
+      let seconds = 30;
+      const interval = setInterval(() => {
+        seconds--;
+        const cd = el.querySelector("#undoCountdown");
+        if (cd) cd.textContent = seconds;
+        if (seconds <= 0) {
+          clearInterval(interval);
+          // Backup expiré — on le supprime définitivement
+          try {
+            localStorage.removeItem("upte_courses_backup");
+          } catch {}
+          el.style.animation = "toast-out .3s ease forwards";
+          setTimeout(() => el.remove(), 300);
+        }
+      }, 1000);
+
+      // Stocker l'interval pour pouvoir l'annuler
+      el._interval = interval;
     });
+  }
+
+  static _undoReset(toastEl) {
+    if (toastEl?._interval) clearInterval(toastEl._interval);
+    const restored = Storage.restoreCoursesBackup();
+    if (toastEl) {
+      toastEl.style.animation = "toast-out .3s ease forwards";
+      setTimeout(() => toastEl.remove(), 300);
+    }
+    if (restored) {
+      UI.toast("Emploi du temps restauré.", "success");
+      this._afterCoursesChange();
+    }
   }
 
   static _afterCoursesChange() {
@@ -414,6 +478,23 @@ export class App {
       });
     });
     todaySlots.sort((a, b) => timeToMin(a.start) - timeToMin(b.start));
+
+    // Stats dynamiques
+    const allCourses = getActiveCourses();
+    const totalUE = allCourses.length;
+    const totalCredits = allCourses.reduce(
+      (sum, c) => sum + (c.credits || 0),
+      0,
+    );
+    const ueEl = document.getElementById("statTotalUE");
+    const crEl = document.getElementById("statTotalCredits");
+    const sidebarCrEl = document.getElementById("sidebarCredits");
+    const barEl = document.getElementById("creditsBar");
+    if (ueEl) ueEl.textContent = totalUE;
+    if (crEl) crEl.textContent = totalCredits;
+    if (sidebarCrEl) sidebarCrEl.textContent = `${totalCredits} ECTS`;
+    if (barEl)
+      barEl.style.width = `${Math.min((totalCredits / 30) * 100, 100)}%`;
 
     document.getElementById("statTodayCount").textContent = todaySlots.length;
     if (todaySlots.length > 0) {
@@ -573,14 +654,16 @@ export class App {
   static renderWeekGrid() {
     const container = document.getElementById("weekGridContainer");
     const todayName = DAYS[new Date().getDay()];
-    const START_H = 7,
-      END_H = 19,
+    const START_H = 6,
+      END_H = 21,
       SLOT_H = 40,
-      totalPx = (END_H - START_H) * SLOT_H;
+      totalPx = (END_H - START_H) * SLOT_H + 24;
     const courses = getActiveCourses();
 
-    let html = `<div style="display:grid;grid-template-columns:50px repeat(5,1fr);min-width:600px">`;
-    html += `<div style="background:var(--bg3);padding:10px 4px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)"></div>`;
+    const colCount = WEEK_DAYS.length;
+    const minW = 50 + colCount * 110;
+    let html = `<div style="display:grid;grid-template-columns:50px repeat(${colCount},1fr);min-width:${minW}px">`;
+    html += `<div style="background:var(--bg3);padding:10px 4px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);grid-column:1"></div>`;
     WEEK_DAYS.forEach((d) => {
       html += `<div class="wg-header ${d === todayName ? "today-col" : ""}">${d.slice(0, 3).toUpperCase()}</div>`;
     });

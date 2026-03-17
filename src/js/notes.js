@@ -526,7 +526,15 @@ export class Notes {
 
   /* ─── Supprimer ─── */
   static async deleteNote(id) {
-    if (!confirm("Supprimer cette note ?")) return;
+    const ok = await UI.confirm({
+  message: "Supprimer cette note ?",
+  title: "Supprimer la note",
+  confirmText: "Supprimer",
+  cancelText: "Annuler",
+  icon: "trash",
+  danger: true,
+});
+if (!ok) return;
     await NotesDB.delete(id);
     if (this.activeNoteId === id) {
       this.activeNoteId = null;
