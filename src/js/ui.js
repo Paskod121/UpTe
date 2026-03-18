@@ -21,6 +21,7 @@ export class UI {
   static currentPage = "dashboard";
   static calYear = new Date().getFullYear();
   static calMonth = new Date().getMonth();
+  static _themeChanging = false;
 
   static getStoredTheme() {
     try {
@@ -53,8 +54,6 @@ export class UI {
     const metaTheme = document.querySelector('meta[name="theme-color"]');
     if (metaTheme) metaTheme.content = THEME_META[id] ?? "#111510";
   }
-
-  static _themeChanging = false;
 
   static cycleTheme() {
     if (this._themeChanging) return;
@@ -380,5 +379,26 @@ export class UI {
   }
   static selectCalDay(date) {
     this.renderMiniCalendar(date, null);
+  }
+
+  static toggleFullscreen() {
+    const icon = document.getElementById("fsIcon");
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      if (icon)
+        icon.innerHTML = `
+        <polyline points="4 14 10 14 10 20"/>
+        <polyline points="20 10 14 10 14 4"/>
+        <line x1="10" y1="14" x2="3" y2="21"/>
+        <line x1="21" y1="3" x2="14" y2="10"/>`;
+    } else {
+      document.exitFullscreen();
+      if (icon)
+        icon.innerHTML = `
+        <polyline points="15 3 21 3 21 9"/>
+        <polyline points="9 21 3 21 3 15"/>
+        <line x1="21" y1="3" x2="14" y2="10"/>
+        <line x1="3" y1="21" x2="10" y2="14"/>`;
+    }
   }
 }

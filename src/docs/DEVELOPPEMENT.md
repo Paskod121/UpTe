@@ -4,109 +4,122 @@
 
 ## 1. Environnement
 
-- Serveur local requis (modules ES) :
-  - Node : `npx serve .`
-  - Python 3 : `python -m http.server 8080`
-- Aucune dépendance npm, aucun build.
+```bash
+npx serve .           # Node
+python -m http.server # Python 3
+```
+
+Modules ES — serveur local requis.
 
 ---
 
 ## 2. Conventions
 
-- **JS** : ES modules, `"use strict"`. `App`, `UI`, `Learn`, `Notes` exposés sur `window` dans `main.js`.
-- **Validation** : toutes les règles métier dans `validator.js`. `app.js` n'implémente aucune règle directement.
-- **Couleurs** : jamais de hex en dur — toujours `var(--xxx)` en CSS ou `courseColor()` / `typeColor()` en JS.
-- **Icônes** : SVG inline uniquement. Pas d'emoji ni de caractères décoratifs.
-- **Créneaux** : toujours passer par `getCourseSchedules()` — jamais lire `c.jour` directement.
+- JS : ES modules, `"use strict"`. `App`, `UI`, `Learn`, `Notes`, `Combo` sur `window`.
+- Validation : toutes les règles dans `validator.js`.
+- Couleurs : `var(--xxx)` en CSS, `courseColor()` / `typeColor()` en JS. Jamais de hex en dur.
+- Icônes : SVG inline. Pas d'emoji.
+- Créneaux : toujours `getCourseSchedules()` — jamais `c.jour` directement.
+- Placeholders prof : `M. PASKOD` ou `M. KOSSI`. Jamais d'autre nom.
 
 ---
 
 ## 3. Modifications courantes
 
-### 3.1 Modifier le CSS
+### 3.1 CSS
 
 | Fichier | Modifier quand |
 |---|---|
-| `variables.css` | Couleur, nouveau thème |
-| `layout.css` | Sidebar, topbar, grilles, responsive |
-| `components.css` | Card, slot, modale, formulaire, toast |
-| `utilities.css` | Bouton, tag, animation, schedule builder |
-| `learning.css` | Pomodoro, viewer documents, éditeur notes |
-
-Ne jamais écrire dans `main.css`.
+| `variables.css` | Couleur, thème, backdrop fullscreen |
+| `layout.css` | Sidebar, topbar, grilles, sidebar scroll |
+| `components.css` | Composant existant |
+| `utilities.css` | Bouton, tag, combobox, schedule builder, theme toast |
+| `learning.css` | Pomodoro, documents, notes |
 
 **Ajouter un thème :**
-
-1. `variables.css` → `[data-theme="mon-theme"] { ... }`
-2. `ui.js` → tableau `THEMES` : `{ id: "mon-theme", label: "..." }`
-3. `ui.js` → objet `THEME_META` : `"mon-theme": "#xxxxxx"`
-4. `constants.js` → clé `color` de chaque cours et `TYPE_COLORS`
-5. `utils.js` → `getTheme()` : ajouter `if (t === "mon-theme") return "mon-theme"`
+1. `variables.css` → `[data-theme="xxx"] { ... }`
+2. `ui.js` → `THEMES` et `THEME_META`
+3. `constants.js` → clé dans `color` et `TYPE_COLORS`
+4. `utils.js` → `getTheme()` : ajouter le cas
 
 ### 3.2 Modifier les données de cours
 
-Éditer `src/js/constants.js`, tableau `COURSES_DATA`. Format attendu :
-
+`src/js/constants.js` → `COURSES_DATA`. Format :
 ```js
 {
-  code: "INF1427", name: "Structure de Données", credits: 3,
-  prof: "M. PASKOD", salle: "Amphi A",
-  schedules: [
-    { jour: "Lundi", start: "08:00", end: "10:00" },
-    { jour: "Jeudi", start: "14:00", end: "16:00" },
-  ],
-  color: { green: "#22c55e", blue: "#38bdf8", light: "#15803d" }
+  code, name, credits, prof, salle,
+  schedules: [{ jour, start, end }],  // Lundi–Dimanche, 06h–21h
+  color: { green, blue, light }
 }
 ```
 
-Les utilisateurs peuvent aussi modifier leurs cours depuis la page **Paramètres** via le schedule builder dynamique — ces modifications sont persistées dans `localStorage`.
+Ou depuis la page Paramètres avec le schedule builder.
 
-### 3.3 Ajouter un créneau à un cours existant
+### 3.3 Ajouter/modifier les jours disponibles
 
-Depuis l'interface : Paramètres → cliquer sur l'icône modifier du cours → "+ Ajouter un créneau".
+`src/js/constants.js` → `WEEK_DAYS`. La grille semaine, la liste et le schedule builder s'adaptent automatiquement.
 
-Depuis le code : ajouter un objet `{ jour, start, end }` dans le tableau `schedules` du cours dans `constants.js`.
+### 3.4 Modifier la plage horaire
 
-### 3.4 Ajouter une page
+`src/js/app.js` → `renderWeekGrid()` :
+```js
+const START_H = 6, END_H = 21, SLOT_H = 40, totalPx = (END_H-START_H)*SLOT_H + 24;
+```
 
-1. `index.html` — `<div class="page" id="page-ma-page">` et `nav-item`
+### 3.5 Ajouter une page
+
+1. `index.html` — `<div class="page" id="page-xxx">` et `nav-item`
 2. `ui.js` — `titles` dans `navigate()` et cas de rendu
-3. `app.js` (ou nouveau module) — `renderMaPage()`
+3. `app.js` ou nouveau module — `renderXxx()`
 
-### 3.5 Ajouter un type de session
+### 3.6 Ajouter des suggestions au combobox
 
-1. `constants.js` — `TYPE_COLORS` (3 clés green/blue/light) et `TYPE_LABELS`
-2. `index.html` — `<option>` dans les deux selects de type
+Dans `index.html`, trouver le `data-options` du combo concerné et ajouter la valeur dans le tableau JSON.
 
-### 3.6 Ajouter une règle de validation
+### 3.7 Ajouter un type de session
 
-Ouvrir `src/js/validator.js`, trouver la fonction concernée, appeler `setFieldError(fieldId, message)`.
+1. `constants.js` → `TYPE_COLORS` (3 clés) et `TYPE_LABELS`
+2. `index.html` → `<option>` dans les deux selects de type
+
+### 3.8 Ajouter une règle de validation
+
+`src/js/validator.js` → fonction concernée → `setFieldError(fieldId, message)`.
 
 ---
 
-## 4. Fichiers à ne pas casser
+## 4. PWA — checklist déploiement
+
+- [ ] `src/images/icon-192.png` présent
+- [ ] `src/images/icon-512.png` présent
+- [ ] `src/images/og-cover.png` présent
+- [ ] `manifest.json` valide (vérifier sur [web.dev/measure](https://web.dev/measure))
+- [ ] HTTPS actif (Vercel le fournit automatiquement)
+
+Installation : Chrome → icône d'installation barre d'adresse. iOS Safari → Partager → Sur l'écran d'accueil.
+
+---
+
+## 5. Fichiers à ne pas casser
 
 - `index.html` — chemins `src/css/main.css` et `src/js/main.js` fixes.
-- `src/css/main.css` — uniquement `@import`, ordre : variables → layout → components → utilities → learning.
-- `src/js/main.js` — point d'entrée unique, expose les 4 classes sur `window`.
-- `Storage.KEY` (`gl_s4_planner_v2`) — changer repart d'un localStorage vide.
-- Ne jamais lire `c.jour`, `c.start`, `c.end` directement — toujours `getCourseSchedules(c)`.
+- `src/css/main.css` — uniquement `@import`, ordre fixe.
+- `src/js/main.js` — expose les 5 classes sur `window`.
+- `Storage.KEY` — changer repart d'un localStorage vide.
+- Ne jamais lire `c.jour` directement — toujours `getCourseSchedules(c)`.
 
 ---
 
-## 5. Déploiement
+## 6. Déploiement
 
-Copier racine + `src/` sur hébergeur statique. Aucun build requis.
+```bash
+git add .
+git commit -m "feat: description"
+git push
+# Vercel déploie automatiquement
+```
 
 ---
 
-## 6. Mise à jour de la documentation
+## 7. Mise à jour de la documentation
 
-Après toute modification importante :
-
-1. `ARCHITECTURE.md` — structure ou modules
-2. `DONNEES.md` — modèle de données
-3. `DEVELOPPEMENT.md` — conventions ou procédures
-4. `src/docs/README.md` — si nouveau document
-5. `README.md` racine — structure globale
-6. `CHANGELOG.md` — entrée datée
+Après toute modification importante : `ARCHITECTURE.md`, `DONNEES.md`, `DEVELOPPEMENT.md`, `CHANGELOG.md`, `README.md`.

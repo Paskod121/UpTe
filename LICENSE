@@ -1,21 +1,48 @@
-MIT License
+LICENCE PROPRIÉTAIRE — UpTe
+Copyright (c) 2025–2026 PasKod (Pascal Sewonou)
+Tous droits réservés.
 
-Copyright (c) 2026 PasKod
+Le présent logiciel, son code source, sa conception, ses interfaces et sa
+documentation constituent une œuvre originale protégée par le droit d'auteur.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+DROITS ACCORDÉS
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+L'accès public au code source est fourni à des fins de transparence et de
+consultation uniquement. Il ne confère aucun droit d'usage au-delà de ce
+qui est expressément mentionné ci-dessous.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Toute personne est autorisée à :
+- consulter le code source à des fins d'apprentissage personnel ;
+- signaler des bugs ou proposer des améliorations via les canaux officiels.
+
+INTERDICTIONS
+
+Sans autorisation écrite préalable de l'auteur, il est strictement interdit de :
+- copier, reproduire ou dupliquer tout ou partie du code source ;
+- modifier, adapter ou créer des œuvres dérivées basées sur ce logiciel ;
+- redistribuer, publier ou mettre à disposition le code sous quelque forme que
+  ce soit ;
+- utiliser le nom, le logo, la marque "UpTe" ou tout élément d'identité visuelle
+  associé à des fins commerciales ou personnelles ;
+- déployer une version modifiée ou non de ce logiciel à destination de tiers ;
+- intégrer tout ou partie de ce code dans un autre projet, commercial ou non.
+
+USAGE PERSONNEL
+
+L'installation de l'application à titre strictement personnel, via les canaux
+officiels (up-te.vercel.app ou toute URL officielle communiquée par l'auteur),
+est autorisée et encouragée.
+
+ABSENCE DE GARANTIE
+
+Ce logiciel est fourni tel quel, sans garantie d'aucune sorte, explicite ou
+implicite. L'auteur ne saurait être tenu responsable de tout dommage direct
+ou indirect résultant de l'utilisation ou de l'impossibilité d'utiliser
+ce logiciel.
+
+CONTACT
+
+Pour toute demande de partenariat, licence commerciale ou autorisation
+spéciale : contacter l'auteur via les canaux officiels du projet UpTe.
+
+PasKod — Lomé, Togo — 2025

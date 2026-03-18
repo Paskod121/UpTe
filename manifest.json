@@ -3,9 +3,26 @@
   "short_name": "UpTe",
   "description": "Gestion et planification des cours — Licence Pro GL S4, EPL Lomé",
   "start_url": "/",
-  "display": "standalone",
-  "background_color": "#0a0d0b",
-  "theme_color": "#111510",
+  "display": "fullscreen",
+  "background_color": "#f4f6f3",
+  "theme_color": "#16a34a",
   "orientation": "any",
-  "lang": "fr"
+  "lang": "fr",
+  "icons": [
+    { "src": "src/images/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "src/images/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable any" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Planifier une révision",
+      "url": "/?action=plan",
+      "icons": [{ "src": "src/images/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Emploi du temps",
+      "url": "/?page=schedule",
+      "icons": [{ "src": "src/images/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
 }

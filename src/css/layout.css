@@ -96,6 +96,35 @@ body {
 /* ─── Nav ─── */
 .nav-section {
     padding: 12px 12px 4px;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color .3s;
+}
+
+.nav-section:hover {
+    scrollbar-color: var(--border) transparent;
+}
+
+.nav-section::-webkit-scrollbar {
+    width: 3px;
+}
+
+.nav-section::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.nav-section::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 99px;
+    transition: background .3s;
+}
+
+.nav-section:hover::-webkit-scrollbar-thumb {
+    background: var(--border);
 }
 
 .nav-label {
@@ -512,9 +541,10 @@ body {
 
 @media (max-width: 480px) {
     .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 12px;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
     }
+
 
     .content {
         padding: 12px;

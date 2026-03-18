@@ -4,61 +4,80 @@
 
 ## [Non versionné] — 2025–2026
 
-### Ajouté — Créneaux multiples par cours
+### Ajouté — PWA & Installation
 
-- Modèle de données migré : `jour/start/end` → `schedules: [{ jour, start, end }]`.
-- Un cours peut avoir zéro, un ou plusieurs créneaux sur des jours différents.
-- `normalizeCourse()` dans `utils.js` — migration à la volée, rétrocompatibilité totale.
-- Nouveaux helpers : `getCourseSchedules`, `getSchedulesForDay`, `getCoursesForDay`.
-- `renderWeekGrid`, `renderScheduleList`, `renderDashboard`, `renderCourseList`, `showCourseDetail` mis à jour pour lire `schedules[]`.
-- Schedule builder dynamique dans les modales add/edit cours : lignes `[Jour] [Début] → [Fin] [×]`, bouton "+ Ajouter un créneau", validation ligne par ligne, détection des doublons.
-- `validator.js` mis à jour : validation de chaque créneau individuellement.
-- `utilities.css` : styles `.schedule-row`, `.schedule-builder`, `.schedule-add-btn`.
+- `manifest.json` : `display: "fullscreen"`, icons 192/512, shortcuts (Planifier, Emploi du temps).
+- `favicon.svg` comme icône SVG maskable.
+- `src/images/icon-192.png` et `icon-512.png` requis pour installation Android/iOS.
+- `src/images/og-cover.png` pour prévisualisation WhatsApp/Discord.
+- Meta Open Graph et Twitter Card dans `index.html`.
+- Bouton plein écran dans la topbar (`UI.toggleFullscreen()`).
+- `::backdrop { background: var(--bg) }` — transition fullscreen adaptée au thème.
 
-### Ajouté — Espace d'apprentissage
+### Ajouté — Combobox custom
 
-- Page **Apprentissage** : Pomodoro + bibliothèque de documents par UE.
-- Pomodoro : ring SVG animé, 3 modes, son WebAudio, messages rotatifs, stats persistées.
-- Documents : upload PDF/DOCX/PPTX (max 20 Mo), stockage IndexedDB (`upte_docs`).
-- Viewer PDF via PDF.js, DOCX via mammoth.js, PPTX via JSZip — chargés à la demande.
-- `src/js/learn.js`, `src/css/learning.css`.
+- `src/js/combo.js` — remplace les `<datalist>` natifs par un composant cohérent avec les thèmes.
+- Champs Établissement (université, école, parcours, semestre, année) utilisent le combobox.
+- Saisie libre acceptée — les suggestions ne sont pas bloquantes.
+- Scrollbar invisible par défaut, apparaît au survol.
 
-### Ajouté — Éditeur de notes
+### Ajouté — Année académique
 
-- Page **Prise de notes** : éditeur riche par UE, stockage IndexedDB (`upte_notes`).
-- Toolbar : titres H1–H4, gras/italique/souligné/barré/exposant, taille ±, 8 couleurs + surlignage, listes, alignement, indentation, undo/redo, plein écran.
-- Sauvegarde automatique 1.2s, Ctrl+S, indicateur d'état.
-- Export en fichier HTML téléchargeable.
-- `src/js/notes.js` (styles dans `learning.css`).
+- Champ `annee` dans les paramètres établissement.
+- `sidebarAnnee` mis à jour dynamiquement via `applySettings()`.
+- `Storage.DEFAULT_SETTINGS` étendu avec `annee: "2025–2026"`.
 
-### Ajouté — Paramètres et CRUD cours
+### Ajouté — Stats dashboard dynamiques
 
-- Page **Paramètres** : université, école, parcours, semestre.
-- CRUD cours avec color picker 12 couleurs et schedule builder.
-- `Storage.getCustomCourses`, `saveCustomCourses`, `resetCourses`, `getSettings`, `saveSettings`.
-- `getActiveCourses()` — cours custom ou COURSES_DATA selon localStorage.
+- `statTotalUE`, `statTotalCredits`, `sidebarCredits`, `creditsBar` — calculés depuis `getActiveCourses()`.
+- `coursesPageTitle`, `coursesCreditsTag`, `scheduleYearTag` — mis à jour dynamiquement.
+- Barre crédits calculée sur base 30 crédits max.
 
-### Ajouté — Validation centralisée
+### Ajouté — Undo réinitialisation
 
-- `src/js/validator.js` — toutes les règles métier séparées de `app.js`.
-- `.field-invalid` — bordure rouge + glow sur champ invalide.
+- `Storage.resetCourses()` sauvegarde dans `upte_courses_backup` avant suppression.
+- `Storage.restoreCoursesBackup()` et `hasCoursesBackup()`.
+- Toast avec compte à rebours 30s + bouton "Annuler" → `App._undoReset()`.
+- Après 30s : backup supprimé définitivement.
 
-### Ajouté — 3 thèmes
+### Ajouté — Samedi et Dimanche
 
-- `[data-theme="light"]` — clair, palette verte saturée.
-- Triple palette `color: { green, blue, light }` par cours et par type.
-- `UI._rerenderAll()` — re-rendu complet au changement de thème, sans rechargement.
-- Cycle : `light` → `blue` → `green`.
+- `WEEK_DAYS` étendu à 7 jours.
+- Grille semaine, liste emploi du temps et schedule builder mis à jour.
+- Plage horaire étendue : `START_H = 6`, `END_H = 21`, padding bas +24px.
+- Colonnes grille dynamiques selon `WEEK_DAYS.length`.
 
-### Ajouté — CSS modulaire
+### Ajouté — Theme switcher premium
 
-- `variables.css`, `layout.css`, `components.css`, `utilities.css`, `learning.css`.
-- `main.css` — 5 `@import` uniquement.
+- Anti-spam : `_themeChanging = false` — clics multiples ignorés pendant 1.8s.
+- Anciens toasts thème supprimés avant d'en créer un nouveau.
+- Toast avec icône contextuelle (soleil/lune/smiley) + points colorés des 3 thèmes.
+- Thème actif mis en évidence avec `transform: scale(1.4)`.
 
-### Ajouté — Initialisation
+### Ajouté — Sidebar scrollable
 
-- Architecture modulaire sous `src/`.
-- Nom **Up●Te**, PWA, modale confirmation, icônes SVG inline.
+- `.nav-section` : `overflow-y: auto`, scrollbar 3px invisible par défaut.
+- Apparaît au survol via `scrollbar-color` transition.
+- Logo et bloc thème/crédits toujours visibles — seule la navigation scrolle.
+
+### Modifié — Notes
+
+- `deleteNote()` utilise `UI.confirm()` au lieu du `confirm()` natif du navigateur.
+
+### Modifié — Stat cards mobile
+
+- `@media (max-width: 480px)` : `grid-template-columns: 1fr 1fr` au lieu de `1fr`.
+
+### Modifié — Schedule builder
+
+- Select jour : `160px` de large, `font-size: 13px`, `height: 38px`.
+- `align-items: start` pour afficher les erreurs sans chevauchement.
+
+---
+
+### Ajouté — Créneaux multiples, Paramètres CRUD, Validation, Thèmes, CSS modulaire
+
+*(voir entrées précédentes)*
 
 ---
 

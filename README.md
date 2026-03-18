@@ -1,23 +1,22 @@
 # UpTe
 
-Plateforme académique de suivi, révision et apprentissage — Licence Pro GL, EPL, Université de Lomé.
+Plateforme académique de suivi, révision et apprentissage.
+Installable comme application sur mobile et desktop (PWA).
 
 ---
 
-## Ce que fait l'application
-
-Architecture modulaire (HTML, CSS, JS séparés). Pas de build, pas de dépendances npm.
+## Pages
 
 | Page | Fonctionnalité |
 |---|---|
-| Tableau de bord | Cours du jour en temps réel, sessions à venir |
-| Emploi du temps | Grille semaine interactive + liste par jour |
-| Mes cours | Toutes les UE avec créneaux multiples |
-| Planificateur | CRUD sessions de révision, calendrier, stats |
-| Conseils révision | 10 stratégies d'apprentissage |
-| Apprentissage | Pomodoro + bibliothèque de documents (PDF/DOCX/PPTX) |
-| Prise de notes | Éditeur riche par UE, sauvegarde auto, export |
-| Paramètres | Établissement, CRUD cours avec créneaux multiples |
+| Tableau de bord | Stats dynamiques, cours du jour, sessions à venir |
+| Emploi du temps | Grille Lun–Dim, 6h–21h, liste par jour |
+| Mes cours | UE avec créneaux multiples |
+| Planificateur | CRUD sessions, calendrier, stats |
+| Conseils révision | 10 stratégies |
+| Apprentissage | Pomodoro + bibliothèque PDF/DOCX/PPTX |
+| Prise de notes | Éditeur riche, sauvegarde auto, export HTML |
+| Paramètres | Établissement + CRUD cours avec créneaux multiples |
 
 ---
 
@@ -27,70 +26,59 @@ Architecture modulaire (HTML, CSS, JS séparés). Pas de build, pas de dépendan
 UpTe/
 ├── index.html
 ├── manifest.json
-├── README.md
-├── CHANGELOG.md
-├── LICENSE
+├── favicon.svg
+├── README.md / CHANGELOG.md / LICENSE
 └── src/
-    ├── css/
-    │   ├── main.css          @import uniquement
-    │   ├── variables.css     custom properties et thèmes
-    │   ├── layout.css        sidebar, topbar, grilles, responsive
-    │   ├── components.css    composants UI
-    │   ├── utilities.css     boutons, tags, schedule builder
-    │   └── learning.css      pomodoro, documents, notes
-    ├── js/
-    │   ├── main.js           point d'entrée
-    │   ├── constants.js      données statiques
-    │   ├── storage.js        localStorage
-    │   ├── utils.js          helpers + schedules
-    │   ├── validator.js      validation centralisée
-    │   ├── ui.js             interface et thèmes
-    │   ├── app.js            logique métier
-    │   ├── learn.js          pomodoro + documents
-    │   └── notes.js          éditeur de notes
-    ├── fonts/ · images/ · videos/
+    ├── css/   main · variables · layout · components · utilities · learning
+    ├── js/    main · constants · storage · utils · validator · combo · ui · app · learn · notes
+    ├── images/  icon-192.png · icon-512.png · og-cover.png
+    ├── fonts/ · videos/
     └── docs/
 ```
 
 ---
 
-## Utilisation
-
-Modules ES — serveur local requis :
+## Installation & lancement
 
 ```bash
 npx serve .           # Node
 python -m http.server # Python 3
 ```
 
+Modules ES — serveur local requis. Pas de build, pas de dépendances npm.
+
+---
+
+## Installation comme app (PWA)
+
+**Android** : Chrome → icône d'installation dans la barre d'adresse.
+**iOS** : Safari → Partager → Sur l'écran d'accueil.
+**Desktop** : Chrome/Edge → icône d'installation barre d'adresse.
+
+Une fois installée, l'app se lance en plein écran sans barre du navigateur.
+
 ---
 
 ## Données intégrées (GL-S4, 2025–2026)
 
-| Code | UE | Crédits |
-|---|---|---|
-| INF1427 | Structure de Données | 3 |
-| INF1428 | Modélisation UML | 3 |
-| INF1425 | Généralités sécurité informatique | 3 |
-| INF1426 | Développement d'applications de bureau | 4 |
-| INF1429 | Normes Documentaires | 4 |
-| INF1421 | Administration de bases de données | 3 |
-| 1INF1423 | Administration Système Linux | 2 |
-| 2INF1423 | Administration Système Windows | 2 |
-| DRT1420 | Droit de l'Informatique | 2 |
-| CPT1420 | Comptabilité Générale de base | 2 |
-| UE Libre | — | 2 |
-
-Total : 27 crédits ECTS. Modifiable depuis Paramètres.
+27 crédits ECTS — 11 UE de Lundi à Vendredi. Modifiable depuis Paramètres.
+Plage horaire disponible : 06h00 – 21h00. Jours : Lundi à Dimanche.
 
 ---
 
 ## Modifications courantes
 
 - **Cours** → `src/js/constants.js` ou page Paramètres
-- **CSS** → fichier concerné dans `src/css/` (ne pas écrire dans `main.css`)
-- **Thème** → `src/docs/DEVELOPPEMENT.md`, section 3.1
-- **Page** → `src/docs/DEVELOPPEMENT.md`, section 3.4
+- **Jours/heures** → `constants.js` (`WEEK_DAYS`) et `app.js` (`renderWeekGrid`)
+- **CSS** → fichier concerné dans `src/css/`
+- **Thème** → `src/docs/DEVELOPPEMENT.md` section 3.1
+
+---
+
+## Déploiement
+
+Vercel — push sur `main` → déploiement automatique.
+URL : `https://up-te.vercel.app`
 
 ---
 

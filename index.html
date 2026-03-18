@@ -37,6 +37,20 @@
       name="twitter:image"
       content="https://up-te.vercel.app/src/images/og-cover.png"
     />
+    <!-- Fullscreen API au lancement -->
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Plein écran automatique si pas déjà en mode standalone
+        const isStandalone =
+          window.matchMedia("(display-mode: fullscreen)").matches ||
+          window.matchMedia("(display-mode: standalone)").matches ||
+          window.navigator.standalone;
+
+        if (!isStandalone && document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        }
+      });
+    </script>
 
     <link rel="manifest" href="manifest.json" />
     <link
@@ -316,6 +330,30 @@
               <span class="day" id="currentDay"></span>
               <span id="currentDate"></span>
             </div>
+
+            <button
+              class="btn-fullscreen"
+              id="btnFullscreen"
+              onclick="UI.toggleFullscreen()"
+              title="Plein écran"
+            >
+              <svg
+                id="fsIcon"
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              >
+                <polyline points="15 3 21 3 21 9" />
+                <polyline points="9 21 3 21 3 15" />
+                <line x1="21" y1="3" x2="14" y2="10" />
+                <line x1="3" y1="21" x2="10" y2="14" />
+              </svg>
+            </button>
+
             <button
               class="btn btn-primary topbar-planifier"
               onclick="UI.openModal('addStudy')"
