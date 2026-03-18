@@ -379,6 +379,10 @@
         <div class="content">
           <!-- DASHBOARD -->
           <div class="page active" id="page-dashboard">
+            <!-- Bannière météo académique + countdown -->
+            <div class="dash-weather-bar" id="dashWeatherBar"></div>
+
+            <!-- Stats grid existante -->
             <div class="stats-grid mb-6">
               <div class="stat-card">
                 <div class="stat-icon">
@@ -398,7 +402,7 @@
                   </svg>
                 </div>
                 <div class="stat-value" id="statTotalUE">—</div>
-                <div class="stat-label">Unit&eacute;s d'enseignement</div>
+                <div class="stat-label">Unités d'enseignement</div>
                 <div class="stat-sub neutral">
                   <svg
                     width="10"
@@ -410,7 +414,7 @@
                   >
                     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                   </svg>
-                  <span id="statTotalCredits">—</span> cr&eacute;dits
+                  <span id="statTotalCredits">—</span> crédits
                 </div>
               </div>
               <div class="stat-card">
@@ -470,10 +474,44 @@
                   </svg>
                 </div>
                 <div class="stat-value" id="statStudySessions">0</div>
-                <div class="stat-label">Sessions planifi&eacute;es</div>
-                <div class="stat-sub up">r&eacute;visions</div>
+                <div class="stat-label">Sessions planifiées</div>
+                <div class="stat-sub up">révisions</div>
               </div>
             </div>
+
+            <!-- Streak + Citation -->
+            <div class="dash-meta-row mb-6">
+              <div class="streak-card" id="streakCard"></div>
+              <div class="quote-card" id="quoteCard"></div>
+            </div>
+
+            <!-- Mini semaine -->
+            <div class="card mb-6" id="miniWeekCard">
+              <div class="card-header">
+                <div class="card-title">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  >
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  Prochains jours
+                </div>
+              </div>
+              <div class="card-body" style="padding: 12px">
+                <div id="miniWeekBody"></div>
+              </div>
+            </div>
+
+            <!-- Aujourd'hui + Sessions + Révision par UE -->
             <div class="today-grid">
               <div>
                 <div class="section-header">
@@ -485,7 +523,7 @@
               </div>
               <div>
                 <div class="section-header">
-                  <div class="section-title">Sessions de r&eacute;vision</div>
+                  <div class="section-title">Sessions de révision</div>
                   <button
                     class="btn btn-ghost btn-sm"
                     onclick="UI.navigate('planner')"
@@ -496,8 +534,32 @@
                 <div id="studySessionsList" class="gap-list"></div>
               </div>
             </div>
-          </div>
 
+            <!-- Taux de révision par UE -->
+            <div class="card mt-6">
+              <div class="card-header">
+                <div class="card-title">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  Révision par UE
+                </div>
+                <div class="tag tag-muted" id="revisionRateTotal"></div>
+              </div>
+              <div class="card-body" style="padding: 16px">
+                <div id="revisionRateBody"></div>
+              </div>
+            </div>
+          </div>
           <!-- SCHEDULE -->
           <div class="page" id="page-schedule">
             <div class="tabs">
