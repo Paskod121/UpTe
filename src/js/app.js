@@ -585,7 +585,6 @@ export class App {
             <div class="slot-meta"><span class="slot-code">${esc(c.code)}</span>${esc(c.salle)}</div>
             ${isActive ? `<div class="slot-progress-bar"><div class="slot-progress-fill" style="width:${progress}%"></div></div>` : ""}
           </div>
-          ${isActive ? `<div class="slot-live-badge">EN COURS</div>` : ""}
         </div>`;
         })
         .join("");
