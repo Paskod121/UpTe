@@ -95,6 +95,10 @@ export class App {
     this.renderCourseList();
     this.renderScheduleList();
     this.renderWeekGrid();
+    // Resize — bascule desktop/mobile
+    window.addEventListener("resize", () => {
+      if (UI.currentPage === "schedule") this.renderWeekGrid();
+    });
     this.renderDashboard();
     UI.renderMiniCalendar(todayStr(), null);
     document.getElementById("studyDate").value = todayStr();
@@ -926,6 +930,163 @@ export class App {
   /* ══════ WEEK GRID ══════ */
   static renderWeekGrid() {
     const container = document.getElementById("weekGridContainer");
+    if (!container) return;
+
+    const isMobile = window.innerWidth <= 768;
+
+    if (isMobile) {
+      this._renderWeekGridMobile(container);
+    } else {
+      this._renderWeekGridDesktop(container);
+    }
+  }
+
+  static _mobileActiveDay = null;
+
+  static _renderWeekGridMobile(container) {
+    const todayName = DAYS[new Date().getDay()];
+    const courses = getActiveCourses();
+
+    // Déterminer le jour actif par défaut
+    if (!this._mobileActiveDay) {
+      // Aujourd'hui si dans WEEK_DAYS, sinon premier jour avec cours, sinon Lundi
+      if (WEEK_DAYS.includes(todayName)) {
+        this._mobileActiveDay = todayName;
+      } else {
+        this._mobileActiveDay =
+          WEEK_DAYS.find((d) =>
+            courses.some((c) => getSchedulesForDay(c, d).length > 0),
+          ) || WEEK_DAYS[0];
+      }
+    }
+
+    const activeDay = this._mobileActiveDay;
+
+    // ─── Tabs ───
+    const tabsHtml = WEEK_DAYS.map((day) => {
+      const hasSlots = courses.some(
+        (c) => getSchedulesForDay(c, day).length > 0,
+      );
+      const isToday = day === todayName;
+      const isActive = day === activeDay;
+      return `<button
+        class="wg-mobile-tab ${isActive ? "active" : ""} ${isToday ? "today" : ""}"
+        onclick="App._setMobileDay('${day}')"
+        data-day="${day}">
+        <span class="wgt-label">${day.slice(0, 3).toUpperCase()}</span>
+        ${hasSlots ? `<span class="wgt-dot"></span>` : ""}
+      </button>`;
+    }).join("");
+
+    // ─── Slots du jour actif ───
+    const daySlots = [];
+    courses.forEach((c) => {
+      getSchedulesForDay(c, activeDay).forEach((s) => {
+        daySlots.push({ course: c, ...s });
+      });
+    });
+    daySlots.sort((a, b) => timeToMin(a.start) - timeToMin(b.start));
+
+    const now = new Date();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    const isCurrentDay = activeDay === todayName;
+
+    let slotsHtml;
+    if (daySlots.length === 0) {
+      slotsHtml = `
+        <div class="wg-mobile-empty">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".3">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <span>Aucun cours ce jour</span>
+        </div>`;
+    } else {
+      slotsHtml = daySlots
+        .map(({ course: c, start, end }) => {
+          const color = courseColor(c);
+          const startMin = timeToMin(start);
+          const endMin = timeToMin(end);
+          const isActive =
+            isCurrentDay && nowMin >= startMin && nowMin < endMin;
+          const isPast = isCurrentDay && nowMin >= endMin;
+          const progress = isActive
+            ? Math.round(((nowMin - startMin) / (endMin - startMin)) * 100)
+            : 0;
+          const dur = ((endMin - startMin) / 60).toFixed(1).replace(".0", "");
+
+          return `
+          <div class="wg-mobile-slot ${isActive ? "active" : ""} ${isPast ? "past" : ""}"
+            style="--slot-color:${color}"
+            onclick="App.showCourseDetail('${c.code}')">
+            <div class="wgms-accent"></div>
+            <div class="wgms-time">
+              <span class="wgms-start">${start}</span>
+              <span class="wgms-arrow">→</span>
+              <span class="wgms-end">${end}</span>
+              <span class="wgms-dur">${dur}h</span>
+            </div>
+            <div class="wgms-body">
+              <div class="wgms-name">${esc(c.name)}</div>
+              <div class="wgms-meta">
+                <span class="wgms-code" style="color:${color};background:${color}18">${esc(c.code)}</span>
+                ${c.prof ? `<span class="wgms-prof">${esc(c.prof)}</span>` : ""}
+                ${c.salle ? `<span class="wgms-salle">${esc(c.salle)}</span>` : ""}
+              </div>
+              ${
+                isActive
+                  ? `
+                <div class="wgms-progress">
+                  <div class="wgms-progress-fill" style="width:${progress}%;background:${color}"></div>
+                </div>
+                <span class="wgms-live">EN COURS</span>`
+                  : ""
+              }
+            </div>
+            <div class="wgms-credits">
+              <span style="color:${color}">${c.credits}</span>
+              <span>cr</span>
+            </div>
+          </div>`;
+        })
+        .join("");
+    }
+
+    container.innerHTML = `
+      <div class="wg-mobile-wrap">
+        <div class="wg-mobile-tabs" id="wgMobileTabs">${tabsHtml}</div>
+        <div class="wg-mobile-day-label">
+          <span class="wgmd-name ${activeDay === todayName ? "today" : ""}">${activeDay}</span>
+          <span class="wgmd-count">${daySlots.length} cours · ${daySlots.reduce(
+            (a, s) => a + (timeToMin(s.end) - timeToMin(s.start)) / 60,
+            0,
+          )}h</span>
+        </div>
+        <div class="wg-mobile-slots" id="wgMobileSlots">${slotsHtml}</div>
+      </div>`;
+
+    // Scroll tab actif dans la vue
+    requestAnimationFrame(() => {
+      const activeTab = container.querySelector(".wg-mobile-tab.active");
+      if (activeTab) {
+        activeTab.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+          inline: "center",
+        });
+      }
+    });
+  }
+
+  static _setMobileDay(day) {
+    this._mobileActiveDay = day;
+    const container = document.getElementById("weekGridContainer");
+    if (container) this._renderWeekGridMobile(container);
+  }
+
+  static _renderWeekGridDesktop(container) {
     const todayName = DAYS[new Date().getDay()];
     const START_H = 6,
       END_H = 21,
@@ -954,9 +1115,9 @@ export class App {
       const isToday = day === todayName;
       const daySlots = [];
       courses.forEach((c) => {
-        getSchedulesForDay(c, day).forEach((s) => {
-          daySlots.push({ course: c, ...s });
-        });
+        getSchedulesForDay(c, day).forEach((s) =>
+          daySlots.push({ course: c, ...s }),
+        );
       });
       html += `<div style="position:relative;height:${totalPx}px;border-right:1px solid var(--border);background:${isToday ? "var(--green-dim)" : ""};min-width:0">`;
       for (let h = START_H; h <= END_H; h++) {
