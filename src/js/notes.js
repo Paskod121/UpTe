@@ -483,7 +483,8 @@ export class Notes {
         <!-- Zone d'édition -->
         <div class="notes-editor-area" id="noteEditorArea"
           contenteditable="true"
-          spellcheck="true"
+          spellcheck="false"
+          lang="fr"
           oninput="Notes._onInput()"
           onkeydown="Notes._onKeydown(event)"
           onmouseup="Notes._updateSizeDisplay()"
