@@ -76,11 +76,11 @@ export function getCoursesForDay(courses, jour) {
 export function getTheme() {
   try {
     const t = localStorage.getItem("upte_theme");
-    if (t === "blue") return "blue";
-    if (t === "light") return "light";
-    return "green";
+    if (t === "blue")  return "blue";
+    if (t === "green") return "green";
+    return "light";
   } catch {
-    return "green";
+    return "light";
   }
 }
 

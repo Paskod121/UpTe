@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#111510" />
+    <meta name="theme-color" content="#ffffff" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
       name="apple-mobile-web-app-status-bar-style"
@@ -58,6 +58,22 @@
     />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <link rel="stylesheet" href="src/css/main.css" />
+    
+    //Charger le theme actuel en premier
+    <script>
+      (function () {
+        try {
+          const t = localStorage.getItem("upte_theme");
+          const theme = t === "blue" || t === "green" ? t : "light";
+          if (theme === "blue")
+            document.documentElement.setAttribute("data-theme", "blue");
+          if (theme === "green")
+            document.documentElement.removeAttribute("data-theme");
+          if (theme === "light")
+            document.documentElement.setAttribute("data-theme", "light");
+        } catch {}
+      })();
+    </script>
   </head>
   <body>
     <div id="app" class="app">

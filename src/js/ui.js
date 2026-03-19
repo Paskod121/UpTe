@@ -12,9 +12,9 @@ const THEMES = [
 ];
 
 const THEME_META = {
-  green: "#111510",
-  blue: "#0a1628",
   light: "#ffffff",
+  blue:  "#0a1628",
+  green: "#111510",
 };
 
 export class UI {
@@ -26,9 +26,9 @@ export class UI {
   static getStoredTheme() {
     try {
       const t = localStorage.getItem(THEME_KEY);
-      return THEMES.some((x) => x.id === t) ? t : "green";
+      return THEMES.some((x) => x.id === t) ? t : "light";
     } catch {
-      return "green";
+      return "light";
     }
   }
 

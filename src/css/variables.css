@@ -1,42 +1,42 @@
 :root {
   /* ─── Arrière-plans ─── */
-  --bg: #0a0d0b;
-  --bg2: #111510;
-  --bg3: #161c14;
-  --surface: #1a2118;
-  --surface2: #1f2a1c;
-  --border: #2a3827;
+  --bg: #070a08;
+  --bg2: #0c1209;
+  --bg3: #10160e;
+  --surface: #141d12;
+  --surface2: #192416;
+  --border: #1d2b1a;
 
-  /* ─── Accent principal (vert par défaut) ─── */
-  --green: #4ade80;
-  --green2: #22c55e;
+  /* ─── Accent principal ─── */
+  --green: #3dd68c;
+  --green2: #25c274;
   --green3: #16a34a;
-  --green-dim: #86efac20;
-  --green-glow: #4ade8040;
+  --green-dim: #3dd68c18;
+  --green-glow: #3dd68c30;
 
   /* ─── Couleurs fixes ─── */
-  --red: #ef4444;
-  --red-dim: #ef444420;
-  --orange: #f97316;
+  --red: #f87171;
+  --red-dim: #f8717118;
+  --orange: #fb923c;
   --white: #f0f4ef;
 
   /* ─── Texte ─── */
-  --text: #e8f0e6;
-  --muted: #6b7f68;
-  --muted2: #4a5c47;
+  --text: #e2ede0;
+  --muted: #5a7257;
+  --muted2: #3d5239;
 
   /* ─── Effets ─── */
-  --shadow: 0 8px 32px #00000080;
+  --shadow: 0 2px 8px #00000050, 0 8px 32px #00000038;
   --radius: 14px;
   --radius-sm: 8px;
 
-  /* ─── Couleurs sémantiques (composants) ─── */
-  --accent-logo-end: #0d7f34;
-  --event-cours-bg-a: #16a34a90;
-  --event-cours-bg-b: #15803d80;
-  --event-cours-text: #d1fae5;
-  --tip-bg-a: #16a34a18;
-  --tip-border: #16a34a40;
+  /* ─── Sémantiques ─── */
+  --accent-logo-end: #0a6e2c;
+  --event-cours-bg-a: #16a34a70;
+  --event-cours-bg-b: #15803d58;
+  --event-cours-text: #bbf7d0;
+  --tip-bg-a: #16a34a14;
+  --tip-border: #16a34a30;
 }
 
 /* ─── Thème Bleu ─── */
