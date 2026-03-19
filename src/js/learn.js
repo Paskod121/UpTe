@@ -225,11 +225,13 @@ export class Pomodoro {
         nextMode: next,
       });
       this._setBadge(true);
+      if (window._notifyPomoDone) window._notifyPomoDone("work", MODES[next].label);
       this._switchMode(next);
     } else {
       const duration = MODES[this.mode].min;
       this._toastCard({ isWork: false, duration, nextMode: "work" });
       this._setBadge(false);
+      if (window._notifyPomoDone) window._notifyPomoDone(this.mode, "Travail");
       this._switchMode("work");
     }
   }
