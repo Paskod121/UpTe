@@ -120,14 +120,26 @@ export class UI {
   }
 
   static navigate(page) {
-    document
-      .querySelectorAll(".page")
-      .forEach((p) => p.classList.remove("active"));
+    const current = document.querySelector(".page.active");
+    if (current) {
+      current.style.animation = "none";
+      current.style.opacity = "0";
+      current.style.transform = "scale(0.98)";
+      current.style.transition = "opacity 0.1s ease, transform 0.1s ease";
+    }
     document
       .querySelectorAll(".nav-item")
       .forEach((n) => n.classList.remove("active"));
-    const el = document.getElementById("page-" + page);
-    if (el) el.classList.add("active");
+
+    setTimeout(() => {
+      document.querySelectorAll(".page").forEach((p) => {
+        p.classList.remove("active");
+        p.style.cssText = "";
+      });
+      const el = document.getElementById("page-" + page);
+      if (el) el.classList.add("active");
+    }, 100);
+
     document.querySelectorAll(".nav-item").forEach((n) => {
       if (
         n.getAttribute("onclick") &&

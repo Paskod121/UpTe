@@ -165,6 +165,7 @@ export class Pomodoro {
   start() {
     if (this.running) return;
     this.running = true;
+    this._startedAt = Date.now();
     this._interval = setInterval(() => this._tick(), 1000);
     this._render();
   }
@@ -208,6 +209,9 @@ export class Pomodoro {
   _completeNatural() {
     this.running = false;
     clearInterval(this._interval);
+    const expectedMs = MODES[this.mode].min * 60 * 1000;
+    const elapsedMs = Date.now() - (this._startedAt || 0);
+    if (elapsedMs < expectedMs * 0.97) return;
     this._beep();
 
     if (this.mode === "work") {
