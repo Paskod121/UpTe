@@ -2,9 +2,9 @@
 
 import { getActiveCourses, esc, courseColor, courseByCode } from "./utils.js";
 
-/* ══════════════════════════════════════════════
+/* 
    INDEXEDDB — Documents
-══════════════════════════════════════════════ */
+ */
 class DocDB {
   static DB_NAME = "upte_docs";
   static DB_VERSION = 1;
@@ -101,14 +101,14 @@ class DocDB {
   }
 }
 
-/* ══════════════════════════════════════════════
+/* 
    POMODORO
    Méthode Cirillo stricte :
    · Seule une session TRAVAIL complétée via _tick()
      incrémente les statistiques.
    · setMode() manuel et skip() = zéro stat, zéro toast.
    · Anti-spam : un seul toast Pomodoro actif à la fois.
-══════════════════════════════════════════════ */
+ */
 const MODES = {
   work: { label: "Travail", min: 25, color: "var(--green)", key: "work" },
   shortBreak: {
@@ -557,9 +557,9 @@ export class Pomodoro {
   }
 }
 
-/* ══════════════════════════════════════════════
+/* 
    VIEWERS
-══════════════════════════════════════════════ */
+ */
 async function renderPDF(buffer, container) {
   if (!window.pdfjsLib) {
     await new Promise((res, rej) => {
@@ -748,9 +748,9 @@ async function renderPPTX(buffer, name, container) {
     </div>`;
 }
 
-/* ══════════════════════════════════════════════
+/* 
    LEARN — Module principal
-══════════════════════════════════════════════ */
+ */
 export class Learn {
   static activeCourse = null;
   static _docCountCache = {};

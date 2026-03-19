@@ -2,9 +2,9 @@
 
 import { getActiveCourses, esc, courseColor, courseByCode } from "./utils.js";
 
-/* ══════════════════════════════════════════════
+/* 
    NOTES DB — IndexedDB
-══════════════════════════════════════════════ */
+ */
 class NotesDB {
   static DB_NAME = "upte_notes";
   static DB_VERSION = 1;
@@ -90,9 +90,9 @@ class NotesDB {
   }
 }
 
-/* ══════════════════════════════════════════════
+/* 
    NOTES MODULE
-══════════════════════════════════════════════ */
+ */
 export class Notes {
   static activeCourse = null;
   static activeNoteId = null;
@@ -255,8 +255,42 @@ export class Notes {
           </div>
         </div>
 
+        ${
+          window.innerWidth <= 768
+            ? `
+          <div class="notes-toolbar-mobile" id="notesToolbarMobile">
+            <div class="ntb-mobile-main">
+              <button class="ntb-btn" onclick="Notes._exec('bold')" title="Gras">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"/></svg>
+              </button>
+              <button class="ntb-btn" onclick="Notes._exec('italic')" title="Italique">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="19" y1="4" x2="10" y2="4"/><line x1="14" y1="20" x2="5" y2="20"/><line x1="15" y1="4" x2="9" y2="20"/></svg>
+              </button>
+              <button class="ntb-btn" onclick="Notes._execBlock('h2')" title="Titre">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+              </button>
+              <button class="ntb-btn" onclick="Notes._exec('insertUnorderedList')" title="Liste">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>
+              </button>
+              <button class="ntb-btn" onclick="Notes._execHighlight('#fef08a')" title="Surligner">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              </button>
+              <button class="ntb-btn" onclick="Notes._exec('undo')" title="Annuler">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+              </button>
+              <div class="ntb-sep"></div>
+              <button class="ntb-btn ntb-more-btn" onclick="Notes._toggleMoreTools()" title="Plus d'outils" id="ntbMoreBtn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/></svg>
+              </button>
+            </div>
+            <div class="ntb-mobile-more" id="ntbMorePanel" style="display:none">
+            </div>
+          </div>`
+            : ""
+        }
+
         <!-- Toolbar -->
-        <div class="notes-toolbar" id="notesToolbar">
+        <div class="notes-toolbar ${window.innerWidth <= 768 ? "ntb-hidden-mobile" : ""}" id="notesToolbar">
 
           <!-- Bloc 1 : Titres -->
           <div class="ntb-group">
@@ -528,14 +562,14 @@ export class Notes {
   /* ─── Supprimer ─── */
   static async deleteNote(id) {
     const ok = await UI.confirm({
-  message: "Supprimer cette note ?",
-  title: "Supprimer la note",
-  confirmText: "Supprimer",
-  cancelText: "Annuler",
-  icon: "trash",
-  danger: true,
-});
-if (!ok) return;
+      message: "Supprimer cette note ?",
+      title: "Supprimer la note",
+      confirmText: "Supprimer",
+      cancelText: "Annuler",
+      icon: "trash",
+      danger: true,
+    });
+    if (!ok) return;
     await NotesDB.delete(id);
     if (this.activeNoteId === id) {
       this.activeNoteId = null;
@@ -704,6 +738,51 @@ if (!ok) return;
          <line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/>`
         : `<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>
          <line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>`;
+  }
+
+  static _moreOpen = false;
+
+  static _toggleMoreTools() {
+    const panel = document.getElementById("ntbMorePanel");
+    const btn = document.getElementById("ntbMoreBtn");
+    if (!panel) return;
+    this._moreOpen = !this._moreOpen;
+
+    if (this._moreOpen) {
+      panel.style.display = "flex";
+      panel.innerHTML = `
+      <div class="ntb-group">
+        <button class="ntb-btn" onclick="Notes._exec('underline')" title="Souligné">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3"/><line x1="4" y1="21" x2="20" y2="21"/></svg>
+        </button>
+        <button class="ntb-btn" onclick="Notes._exec('strikeThrough')" title="Barré">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><path d="M7 7c0-1.657 2.239-3 5-3s5 1.343 5 3"/><path d="M7 17c0 1.657 2.239 3 5 3s5-1.343 5-3"/></svg>
+        </button>
+        <button class="ntb-btn" onclick="Notes._execBlock('h1')" title="Titre 1">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 6h16M4 12h10"/></svg>
+        </button>
+        <button class="ntb-btn" onclick="Notes._exec('insertOrderedList')" title="Liste numérotée">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+        </button>
+        <button class="ntb-btn" onclick="Notes._exec('justifyLeft')" title="Aligner gauche">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg>
+        </button>
+        <button class="ntb-btn" onclick="Notes._exec('justifyCenter')" title="Centrer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+        </button>
+        <button class="ntb-btn" onclick="Notes._exec('redo')" title="Rétablir">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
+        </button>
+        <button class="ntb-btn" onclick="Notes.exportNote()" title="Exporter">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </button>
+      </div>`;
+      btn.style.color = "var(--green)";
+    } else {
+      panel.style.display = "none";
+      panel.innerHTML = "";
+      btn.style.color = "";
+    }
   }
 
   /* ─── Exporter ─── */

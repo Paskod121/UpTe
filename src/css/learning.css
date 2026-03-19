@@ -1,7 +1,7 @@
-/* ══════════════════════════════════════════════
+/* 
    LEARNING — Espace d'apprentissage
    Compatible 3 thèmes : green / blue / light
-══════════════════════════════════════════════ */
+ */
 
 /* ─── Layout ─── */
 .learn-grid {
@@ -617,9 +617,9 @@
     }
 }
 
-/* ══════════════════════════════════════════════
+/* 
      NOTES — Éditeur de notes
-  ══════════════════════════════════════════════ */
+   */
 
 /* ─── Layout ─── */
 .notes-layout {
@@ -632,6 +632,12 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
+}
+
+@supports (height: 100dvh) {
+    .notes-layout {
+        height: calc(100dvh - 56px - 56px);
+    }
 }
 
 /* ─── Sidebar ─── */
@@ -1066,6 +1072,13 @@
     .notes-layout {
         grid-template-columns: 1fr;
         height: auto;
+        min-height: unset;
+    }
+
+    .notes-editor-area {
+        min-height: 50vh;
+        min-height: 50dvh;
+        padding-bottom: env(keyboard-inset-height, 0px);
     }
 
     .notes-sidebar {
@@ -1086,5 +1099,71 @@
     .ntb-btn {
         width: 28px;
         height: 28px;
+    }
+}
+
+/* 
+   TOOLBAR NOTES — MOBILE
+ */
+.ntb-hidden-mobile {
+    display: none !important;
+}
+
+.notes-toolbar-mobile {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .notes-toolbar-mobile {
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+    }
+
+    .ntb-mobile-main {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 6px 10px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .ntb-mobile-main::-webkit-scrollbar {
+        display: none;
+    }
+
+    .ntb-mobile-main .ntb-btn {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        border-radius: 8px;
+    }
+
+    .ntb-mobile-more {
+        flex-wrap: wrap;
+        gap: 2px;
+        padding: 6px 10px;
+        border-top: 1px solid var(--border);
+        background: var(--bg3);
+        animation: fadeIn .15s ease;
+    }
+
+    .ntb-mobile-more .ntb-btn {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        border-radius: 8px;
+    }
+
+    .ntb-more-btn.active {
+        background: var(--green-dim);
+        color: var(--green);
+    }
+
+    .ntb-hidden-mobile {
+        display: none !important;
     }
 }
