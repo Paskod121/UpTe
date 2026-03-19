@@ -103,6 +103,11 @@ class DocDB {
 
 /* ══════════════════════════════════════════════
    POMODORO
+   Méthode Cirillo stricte :
+   · Seule une session TRAVAIL complétée via _tick()
+     incrémente les statistiques.
+   · setMode() manuel et skip() = zéro stat, zéro toast.
+   · Anti-spam : un seul toast Pomodoro actif à la fois.
 ══════════════════════════════════════════════ */
 const MODES = {
   work: { label: "Travail", min: 25, color: "var(--green)", key: "work" },
@@ -141,7 +146,7 @@ const MSG_BREAK = [
   "Décroche.",
 ];
 
-class Pomodoro {
+export class Pomodoro {
   constructor() {
     this.mode = "work";
     this.timeLeft = MODES.work.min * 60;
@@ -150,63 +155,190 @@ class Pomodoro {
     this.round = 0;
     this.total = parseInt(localStorage.getItem("upte_pomo_total") || "0");
     this.msg = MSG_WORK[0];
+    this._toastEl = null; // anti-spam
   }
 
   toggle() {
     this.running ? this.pause() : this.start();
   }
+
   start() {
     if (this.running) return;
     this.running = true;
     this._interval = setInterval(() => this._tick(), 1000);
     this._render();
   }
+
   pause() {
     this.running = false;
     clearInterval(this._interval);
     this._render();
   }
+
   reset() {
     this.running = false;
     clearInterval(this._interval);
     this.timeLeft = MODES[this.mode].min * 60;
     this._render();
   }
+
+  /* skip — passe au mode suivant SANS compter la session */
   skip() {
     this.running = false;
     clearInterval(this._interval);
-    this._complete();
+    this._switchMode(this._nextMode());
   }
 
+  /* setMode — changement manuel SANS stat SANS toast */
   setMode(mode) {
     this.running = false;
     clearInterval(this._interval);
+    this._switchMode(mode);
+  }
+
+  /* ─── Interne ─── */
+
+  _tick() {
+    this.timeLeft--;
+    if (this.timeLeft <= 0) this._completeNatural();
+    else this._render();
+  }
+
+  /* Seul chemin qui incrémente les stats */
+  _completeNatural() {
+    this.running = false;
+    clearInterval(this._interval);
+    this._beep();
+
+    if (this.mode === "work") {
+      this.round++;
+      this.total++;
+      localStorage.setItem("upte_pomo_total", this.total);
+      const next = this.round % 4 === 0 ? "longBreak" : "shortBreak";
+      this._toastCard({
+        isWork: true,
+        duration: MODES.work.min,
+        nextMode: next,
+      });
+      this._setBadge(true);
+      this._switchMode(next);
+    } else {
+      const duration = MODES[this.mode].min;
+      this._toastCard({ isWork: false, duration, nextMode: "work" });
+      this._setBadge(false);
+      this._switchMode("work");
+    }
+  }
+
+  _nextMode() {
+    if (this.mode !== "work") return "work";
+    return (this.round + 1) % 4 === 0 ? "longBreak" : "shortBreak";
+  }
+
+  _switchMode(mode) {
     this.mode = mode;
     this.timeLeft = MODES[mode].min * 60;
     this._pickMsg();
     this._render();
   }
 
-  _tick() {
-    this.timeLeft--;
-    if (this.timeLeft <= 0) this._complete();
-    else this._render();
-  }
-
-  _complete() {
-    this.running = false;
-    clearInterval(this._interval);
-    this._beep();
-    if (this.mode === "work") {
-      this.round++;
-      this.total++;
-      localStorage.setItem("upte_pomo_total", this.total);
-      this.setMode(this.round % 4 === 0 ? "longBreak" : "shortBreak");
-    } else {
-      this.setMode("work");
+  /* ─── Toast card premium, anti-spam, compatible thèmes ─── */
+  _toastCard({ isWork, duration, nextMode }) {
+    // Retire le toast Pomodoro précédent immédiatement
+    if (this._toastEl) {
+      clearTimeout(this._toastEl._timer);
+      this._toastEl.style.animation = "toast-out .15s ease forwards";
+      const old = this._toastEl;
+      setTimeout(() => old.remove(), 150);
+      this._toastEl = null;
     }
+
+    const tc = document.getElementById("toastContainer");
+    if (!tc) return;
+
+    const accentColor = isWork ? "var(--green)" : "var(--orange)";
+    const nextColor = MODES[nextMode].color;
+    const nextLabel = MODES[nextMode].label;
+    const title = isWork ? "Session accomplie" : "Pause terminée";
+    const message = isWork
+      ? `${duration} min de travail concentré.`
+      : `${duration} min de repos bien mérité.`;
+
+    const iconWork = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    const iconBreak = `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+
+    const el = document.createElement("div");
+    el.className = "toast success toast-pomo-card";
+    el.innerHTML = `
+      <div class="tpc-body">
+        <div class="tpc-icon" style="background:${accentColor}1a;border-color:${accentColor}50;color:${accentColor}">
+          ${isWork ? iconWork : iconBreak}
+        </div>
+        <div class="tpc-text">
+          <div class="tpc-title">${title}</div>
+          <div class="tpc-msg">${message}</div>
+        </div>
+      </div>
+      <div class="tpc-footer">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="tpc-next-label">Prochain</span>
+        <span class="tpc-next-badge" style="color:${nextColor};background:${nextColor}18">${nextLabel}</span>
+      </div>
+      <div class="tpc-bar" style="background:${accentColor}"></div>`;
+
+    tc.appendChild(el);
+    this._toastEl = el;
+
+    // Barre de progression CSS (4s)
+    requestAnimationFrame(() => {
+      el.querySelector(".tpc-bar").style.transform = "scaleX(0)";
+    });
+
+    // Fermeture au clic
+    el.addEventListener(
+      "click",
+      () => {
+        clearTimeout(el._timer);
+        el.style.animation = "toast-out .2s ease forwards";
+        setTimeout(() => {
+          el.remove();
+          if (this._toastEl === el) this._toastEl = null;
+        }, 200);
+      },
+      { once: true },
+    );
+
+    // Auto-fermeture 4s
+    el._timer = setTimeout(() => {
+      el.style.animation = "toast-out .3s ease forwards";
+      setTimeout(() => {
+        el.remove();
+        if (this._toastEl === el) this._toastEl = null;
+      }, 300);
+    }, 4000);
   }
 
+  /* ─── Badge nav Apprentissage ─── */
+  _setBadge(show) {
+    document.querySelectorAll(".nav-item").forEach((n) => {
+      if (!n.getAttribute("onclick")?.includes("'learn'")) return;
+      let badge = n.querySelector(".pomo-nav-badge");
+      if (show) {
+        if (!badge) {
+          badge = document.createElement("span");
+          badge.className = "pomo-nav-badge nav-badge";
+          n.appendChild(badge);
+        }
+        badge.textContent = "🍅";
+        badge.style.cssText =
+          "margin-left:auto;font-size:12px;background:transparent;animation:pomoBadgePop .3s ease";
+      } else {
+        badge?.remove();
+      }
+    });
+  }
+
+  /* ─── Son ─── */
   _beep() {
     try {
       const ctx = new AudioContext();
@@ -243,22 +375,25 @@ class Pomodoro {
     return 1 - this.timeLeft / (MODES[this.mode].min * 60);
   }
 
+  /* Render — silencieux si pomodoroWidget absent du DOM */
   _render() {
     const el = document.getElementById("pomodoroWidget");
     if (!el) return;
+
     const m = MODES[this.mode],
       prog = this._progress(),
       R = 88,
       C = 2 * Math.PI * R;
+    const workedH = Math.floor((this.total * 25) / 60);
+    const workedM = (this.total * 25) % 60;
+    const sessionInCycle = this.round % 4;
     const dot = Array(4)
       .fill(0)
       .map(
         (_, i) =>
-          `<div class="pomo-dot ${i < this.round % 4 ? "filled" : ""}"></div>`,
+          `<div class="pomo-dot ${i < sessionInCycle ? "filled" : ""}"></div>`,
       )
       .join("");
-    const workedH = Math.floor((this.total * 25) / 60),
-      workedM = (this.total * 25) % 60;
 
     el.innerHTML = `
       <div class="pomo-modes">
@@ -266,7 +401,7 @@ class Pomodoro {
           .map(
             (md) => `
           <button class="pomo-mode-btn ${this.mode === md.key ? "active" : ""}"
-            onclick="Learn.pomo.setMode('${md.key}')"
+            onclick="window._pomo.setMode('${md.key}')"
             style="${this.mode === md.key ? `color:${md.color};border-color:${md.color};background:${md.color}18` : ""}">
             ${md.label}
           </button>`,
@@ -275,13 +410,13 @@ class Pomodoro {
       </div>
       <div class="pomo-ring-wrap">
         <svg class="pomo-ring" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="100" cy="100" r="${R}" fill="none" stroke="var(--border)" stroke-width="10"/>
+          <circle cx="100" cy="100" r="${R}" fill="none" stroke="var(--border)" stroke-width="8"/>
           <circle cx="100" cy="100" r="${R}" fill="none"
-            stroke="${m.color}" stroke-width="10" stroke-linecap="round"
+            stroke="${m.color}" stroke-width="8" stroke-linecap="butt"
             stroke-dasharray="${C.toFixed(2)}"
             stroke-dashoffset="${(C * (1 - prog)).toFixed(2)}"
             transform="rotate(-90 100 100)"
-            style="transition:stroke-dashoffset 0.85s linear,stroke .3s"/>
+            style="transition:stroke-dashoffset 0.85s linear,stroke .3s;opacity:${prog < 0.01 ? 0 : 1}"/>
         </svg>
         <div class="pomo-center">
           <div class="pomo-time" style="color:${m.color}">${this._fmt()}</div>
@@ -291,39 +426,133 @@ class Pomodoro {
       <div class="pomo-msg">${this.msg}</div>
       <div class="pomo-dots">${dot}</div>
       <div class="pomo-controls">
-        <button class="pomo-btn pomo-secondary" onclick="Learn.pomo.reset()" title="Réinitialiser">
+        <button class="pomo-btn pomo-secondary"
+          onclick="window._pomo.reset()"
+          title="Annuler la session"
+          ${!this.running && this.timeLeft === MODES[this.mode].min * 60 ? 'disabled style="opacity:.3;cursor:not-allowed"' : ""}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <rect x="3" y="3" width="18" height="18" rx="2"/>
-            <line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/>
+            <path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.18 2.45"/>
+<polyline points="3 3 3 8 8 8"/>
           </svg>
         </button>
-        <button class="pomo-btn pomo-primary" onclick="Learn.pomo.toggle()"
-          style="background:${m.color}22;border-color:${m.color};color:${m.color}">
+        <button class="pomo-btn pomo-primary"
+          onclick="${this.mode === "work" && this.running ? "window._pomo.reset()" : "window._pomo.toggle()"}"
+          style="background:${
+            this.mode === "work" && this.running
+              ? "var(--red-dim)"
+              : m.color + "22"
+          };border-color:${
+            this.mode === "work" && this.running ? "var(--red)" : m.color
+          };color:${
+            this.mode === "work" && this.running ? "var(--red)" : m.color
+          }">
           ${
-            this.running
-              ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`
-              : `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>`
+            this.mode === "work" && this.running
+              ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="17" y1="7" x2="7" y2="17"/><line x1="7" y1="7" x2="17" y2="17"/></svg>
+               <span>Annuler</span>`
+              : this.mode !== "work" && this.running
+                ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3" fill="currentColor" stroke="none"/></svg>
+               <span>Reprendre</span>`
+                : this.running
+                  ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+               <span>Pause</span>`
+                  : `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21 6 3" fill="currentColor" stroke="none"/></svg>
+               <span>Démarrer</span>`
           }
-          <span>${this.running ? "Pause" : "Démarrer"}</span>
         </button>
-        <button class="pomo-btn pomo-secondary" onclick="Learn.pomo.skip()" title="Passer">
+        <button class="pomo-btn pomo-secondary"
+          onclick="window._pomo.skip()"
+          title="Passer"
+          ${!this.running && this.timeLeft === MODES[this.mode].min * 60 ? 'disabled style="opacity:.3;cursor:not-allowed"' : ""}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/>
+            <polygon points="5 4 15 12 5 20 5 4" fill="currentColor" stroke="none"/>
+<line x1="19" y1="4" x2="19" y2="20" stroke-width="2.5"/>
           </svg>
         </button>
       </div>
       <div class="pomo-stats-row">
-        <div class="pomo-stat"><div class="pomo-stat-n">${this.round % 4}</div><div class="pomo-stat-l">Session</div></div>
+        <div class="pomo-stat">
+          <div class="pomo-stat-n">${sessionInCycle}</div>
+          <div class="pomo-stat-l">Session</div>
+        </div>
         <div class="pomo-stat-sep"></div>
-        <div class="pomo-stat"><div class="pomo-stat-n">${this.total}</div><div class="pomo-stat-l">Total</div></div>
+        <div class="pomo-stat">
+          <div class="pomo-stat-n">${this.total}</div>
+          <div class="pomo-stat-l">Total</div>
+        </div>
         <div class="pomo-stat-sep"></div>
-        <div class="pomo-stat"><div class="pomo-stat-n">${workedH}h${String(workedM).padStart(2, "0")}</div><div class="pomo-stat-l">Travaillées</div></div>
+        <div class="pomo-stat">
+          <div class="pomo-stat-n">${workedH}h${String(workedM).padStart(2, "0")}</div>
+          <div class="pomo-stat-l">Travaillées</div>
+        </div>
       </div>`;
+
+    this._updateTopbarIndicator();
+    this._updateNavCounter();
+  }
+
+  _updateTopbarIndicator() {
+    const el = document.getElementById("pomoTopbarIndicator");
+    if (!el) return;
+    const isIdle =
+      !this.running &&
+      this.mode === "work" &&
+      this.timeLeft === MODES.work.min * 60;
+    if (isIdle) {
+      el.style.display = "none";
+      return;
+    }
+    el.style.display = "flex";
+    const m = MODES[this.mode];
+    const C = (2 * Math.PI * 8).toFixed(2);
+    const off = (2 * Math.PI * 8 * (1 - this._progress())).toFixed(2);
+    el.innerHTML = `
+      <div class="pti-ring">
+        <svg width="20" height="20" viewBox="0 0 20 20">
+          <circle cx="10" cy="10" r="8" fill="none" stroke="var(--border)" stroke-width="2.5"/>
+          <circle cx="10" cy="10" r="8" fill="none"
+            stroke="${m.color}" stroke-width="2.5" stroke-linecap="round"
+            stroke-dasharray="${C}" stroke-dashoffset="${off}"
+            transform="rotate(-90 10 10)"
+            style="transition:stroke-dashoffset 0.85s linear"/>
+        </svg>
+      </div>
+      <span class="pti-time" style="color:${m.color}">${this._fmt()}</span>
+      <span class="pti-dot ${this.running ? "running" : "paused"}"></span>`;
+    const bar = document.getElementById("pomoTopbarBar");
+    if (bar) {
+      bar.style.width = `${Math.round(this._progress() * 100)}%`;
+      bar.style.background = m.color;
+    }
+  }
+
+  _updateNavCounter() {
+    document.querySelectorAll(".nav-item").forEach((n) => {
+      if (!n.getAttribute("onclick")?.includes("'learn'")) return;
+      if (n.querySelector(".pomo-nav-badge")) return; // badge 🍅 prioritaire
+      let counter = n.querySelector(".pomo-nav-counter");
+      if (this.running) {
+        if (!counter) {
+          counter = document.createElement("span");
+          counter.className = "pomo-nav-counter";
+          n.appendChild(counter);
+        }
+        const m = MODES[this.mode];
+        counter.textContent = this._fmt();
+        counter.style.cssText = `
+          margin-left:auto;font-family:'Syne',sans-serif;font-size:9px;font-weight:700;
+          background:${m.color}22;color:${m.color};border:1px solid ${m.color}40;
+          padding:2px 6px;border-radius:4px;min-width:36px;text-align:center;
+          letter-spacing:.3px;flex-shrink:0;`;
+      } else {
+        counter?.remove();
+      }
+    });
   }
 }
 
 /* ══════════════════════════════════════════════
-   VIEWER — PDF (premium, auto-hide nav, zoom, clavier)
+   VIEWERS
 ══════════════════════════════════════════════ */
 async function renderPDF(buffer, container) {
   if (!window.pdfjsLib) {
@@ -338,71 +567,49 @@ async function renderPDF(buffer, container) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc =
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.6.347/pdf.worker.min.js";
   }
-
   container.innerHTML = `<div class="doc-loading"><div class="doc-spinner"></div><span>Chargement…</span></div>`;
-
   try {
     const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
     const totalPages = pdf.numPages;
-    let currentPage = 1;
-    let scale = 1.5;
-    let navTimer = null;
-
-    // ─── Wrapper principal ───
+    let currentPage = 1,
+      scale = 1.5,
+      navTimer = null;
     const wrap = document.createElement("div");
     wrap.className = "doc-pdf-wrap";
-
-    // ─── Barre de navigation (auto-hide) ───
     const nav = document.createElement("div");
     nav.className = "doc-pdf-nav doc-pdf-nav--hidden";
-    nav.id = "pdfNav";
-
-    // ─── Zone canvas ───
     const canvasWrap = document.createElement("div");
     canvasWrap.className = "doc-canvas-wrap";
-    canvasWrap.id = "pdfCanvasWrap";
-
-    // ─── Indicateur de page (toujours visible, petit, bas) ───
-    const pageIndicator = document.createElement("div");
-    pageIndicator.className = "pdf-page-indicator";
-    pageIndicator.id = "pdfPageIndicator";
-
+    const pageInd = document.createElement("div");
+    pageInd.className = "pdf-page-indicator";
     wrap.appendChild(nav);
     wrap.appendChild(canvasWrap);
-    wrap.appendChild(pageIndicator);
+    wrap.appendChild(pageInd);
     container.innerHTML = "";
     container.appendChild(wrap);
-
-    // ─── Rendu d'une page ───
     const renderPage = async (num) => {
       const page = await pdf.getPage(num);
-      const viewport = page.getViewport({ scale });
-      const canvas = document.createElement("canvas");
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      canvas.className = "pdf-canvas";
-      canvas.style.maxWidth = "100%";
-      await page.render({ canvasContext: canvas.getContext("2d"), viewport })
+      const vp = page.getViewport({ scale });
+      const c = document.createElement("canvas");
+      c.width = vp.width;
+      c.height = vp.height;
+      c.className = "pdf-canvas";
+      c.style.maxWidth = "100%";
+      await page.render({ canvasContext: c.getContext("2d"), viewport: vp })
         .promise;
-      return canvas;
+      return c;
     };
-
-    // ─── Mise à jour de la nav ───
     const updateNav = () => {
       nav.innerHTML = `
-        <button class="pdf-nav-btn" id="pdfPrev" ${currentPage <= 1 ? "disabled" : ""} onclick="window._pdfPrev()">
+        <button class="pdf-nav-btn" ${currentPage <= 1 ? "disabled" : ""} onclick="window._pdfPrev()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
-        <span class="pdf-nav-label">
-          <strong>${currentPage}</strong><span class="pdf-nav-sep">/</span>${totalPages}
-        </span>
-        <button class="pdf-nav-btn" id="pdfNext" ${currentPage >= totalPages ? "disabled" : ""} onclick="window._pdfNext()">
+        <span class="pdf-nav-label"><strong>${currentPage}</strong><span class="pdf-nav-sep">/</span>${totalPages}</span>
+        <button class="pdf-nav-btn" ${currentPage >= totalPages ? "disabled" : ""} onclick="window._pdfNext()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>`;
-      pageIndicator.textContent = `${currentPage} / ${totalPages}`;
+      pageInd.textContent = `${currentPage} / ${totalPages}`;
     };
-
-    // ─── Afficher/masquer nav ───
     const showNav = () => {
       nav.classList.remove("doc-pdf-nav--hidden");
       clearTimeout(navTimer);
@@ -411,17 +618,13 @@ async function renderPDF(buffer, container) {
         2200,
       );
     };
-
-    // ─── Afficher une page ───
     const showPage = async (num) => {
       canvasWrap.innerHTML = `<div class="doc-loading"><div class="doc-spinner"></div></div>`;
-      const canvas = await renderPage(num);
+      const c = await renderPage(num);
       canvasWrap.innerHTML = "";
-      canvasWrap.appendChild(canvas);
+      canvasWrap.appendChild(c);
       updateNav();
     };
-
-    // ─── Navigation globale ───
     window._pdfPrev = async () => {
       if (currentPage > 1) {
         currentPage--;
@@ -436,44 +639,32 @@ async function renderPDF(buffer, container) {
         showNav();
       }
     };
-
-    // ─── Interactions souris/touch sur la zone canvas ───
     canvasWrap.addEventListener("click", showNav);
     canvasWrap.addEventListener("touchstart", showNav, { passive: true });
     canvasWrap.addEventListener("mousemove", showNav);
-
-    // ─── Zoom trackpad / pinch (wheel avec ctrlKey) ───
     canvasWrap.addEventListener(
       "wheel",
       async (e) => {
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
-          const delta = e.deltaY > 0 ? -0.1 : 0.1;
-          scale = Math.max(0.5, Math.min(4, scale + delta));
+          scale = Math.max(
+            0.5,
+            Math.min(4, scale + (e.deltaY > 0 ? -0.1 : 0.1)),
+          );
           await showPage(currentPage);
         }
       },
       { passive: false },
     );
-
-    // ─── Clavier ───
     const onKey = async (e) => {
       if (
         !document.getElementById("docViewerOverlay")?.classList.contains("open")
       )
         return;
-      if (
-        e.key === "ArrowRight" ||
-        e.key === "ArrowDown" ||
-        e.key === "PageDown"
-      ) {
+      if (["ArrowRight", "ArrowDown", "PageDown"].includes(e.key)) {
         e.preventDefault();
         await window._pdfNext();
-      } else if (
-        e.key === "ArrowLeft" ||
-        e.key === "ArrowUp" ||
-        e.key === "PageUp"
-      ) {
+      } else if (["ArrowLeft", "ArrowUp", "PageUp"].includes(e.key)) {
         e.preventDefault();
         await window._pdfPrev();
       } else if (e.key === "+" || e.key === "=") {
@@ -488,7 +679,6 @@ async function renderPDF(buffer, container) {
     };
     document.addEventListener("keydown", onKey);
     window._pdfCleanup = () => document.removeEventListener("keydown", onKey);
-
     await showPage(1);
     showNav();
   } catch {
@@ -496,9 +686,6 @@ async function renderPDF(buffer, container) {
   }
 }
 
-/* ══════════════════════════════════════════════
-   VIEWER — DOCX
-══════════════════════════════════════════════ */
 async function renderDOCX(buffer, container) {
   if (!window.mammoth) {
     await new Promise((res, rej) => {
@@ -510,9 +697,7 @@ async function renderDOCX(buffer, container) {
       document.head.appendChild(s);
     });
   }
-
-  container.innerHTML = `<div class="doc-loading"><div class="doc-spinner"></div><span>Conversion du document…</span></div>`;
-
+  container.innerHTML = `<div class="doc-loading"><div class="doc-spinner"></div><span>Conversion…</span></div>`;
   try {
     const result = await mammoth.convertToHtml({ arrayBuffer: buffer });
     const wrap = document.createElement("div");
@@ -521,41 +706,30 @@ async function renderDOCX(buffer, container) {
     container.innerHTML = "";
     container.appendChild(wrap);
   } catch {
-    container.innerHTML = `<div class="doc-error"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>Erreur de lecture du document.</span></div>`;
+    container.innerHTML = `<div class="doc-error"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>Erreur de lecture.</span></div>`;
   }
 }
 
-/* ══════════════════════════════════════════════
-   VIEWER — PPTX (téléchargement direct + aperçu titre)
-   Pas d'extraction de texte — les images et la mise
-   en page ne peuvent pas être reproduites fidèlement.
-══════════════════════════════════════════════ */
 async function renderPPTX(buffer, name, container) {
   const blob = new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
   });
   const blobUrl = URL.createObjectURL(blob);
-
   container.innerHTML = `
     <div class="pptx-preview-wrap">
       <div class="pptx-preview-icon">
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="1.2" stroke-linecap="round">
           <rect x="2" y="3" width="20" height="14" rx="2"/>
           <polyline points="8 21 12 17 16 21"/>
-          <line x1="8" y1="9" x2="16" y2="9"/>
-          <line x1="8" y1="12" x2="13" y2="12"/>
+          <line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="12" x2="13" y2="12"/>
         </svg>
       </div>
       <div class="pptx-preview-name">${esc(name)}</div>
-      <p class="pptx-preview-info">
-        Les présentations contiennent des images et une mise en page visuelle qui ne peuvent pas être reproduites dans le navigateur.<br/>
-        Télécharge le fichier pour l'ouvrir dans PowerPoint, LibreOffice ou Google Slides.
-      </p>
+      <p class="pptx-preview-info">Les présentations contiennent des images et une mise en page qui ne peuvent pas être reproduites dans le navigateur.<br/>Télécharge le fichier pour l'ouvrir dans PowerPoint, LibreOffice ou Google Slides.</p>
       <a href="${blobUrl}" download="${esc(name)}" class="btn btn-primary pptx-download-btn">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
+          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
         </svg>
         Télécharger la présentation
       </a>
@@ -572,11 +746,11 @@ async function renderPPTX(buffer, name, container) {
    LEARN — Module principal
 ══════════════════════════════════════════════ */
 export class Learn {
-  static pomo = new Pomodoro();
   static activeCourse = null;
   static _docCountCache = {};
 
   static init() {
+    if (!window._pomo) window._pomo = new Pomodoro();
     this._loadDocCounts();
   }
 
@@ -586,8 +760,9 @@ export class Learn {
     const docsEl = document.getElementById("learnDocsPanel");
     const pomoEl = document.getElementById("pomodoroWidget");
     if (!docsEl || !pomoEl) return;
-    this.pomo._render();
+    window._pomo._render();
     await this._renderDocs();
+    window._pomo._setBadge(false);
   }
 
   static async _renderDocs() {
@@ -609,16 +784,13 @@ export class Learn {
     const wrap = document.getElementById("docsListWrap");
     if (!wrap || !this.activeCourse) return;
     wrap.innerHTML = `<div class="doc-loading" style="padding:20px 0"><div class="doc-spinner"></div></div>`;
-
     const c = courseByCode(this.activeCourse);
     const docs = await DocDB.getDocs(this.activeCourse);
     const color = courseColor(c);
-
     const fmtSize = (b) =>
       b > 1024 * 1024
         ? `${(b / 1024 / 1024).toFixed(1)} Mo`
         : `${(b / 1024).toFixed(0)} Ko`;
-
     const typeIcon = (type) =>
       ({
         pdf: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
@@ -634,7 +806,7 @@ export class Learn {
           <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;color:${color}">${esc(c?.name || this.activeCourse)}</span>
           <span class="tag tag-muted">${docs.length} doc${docs.length > 1 ? "s" : ""}</span>
         </div>
-        <label class="btn btn-primary btn-sm" style="cursor:pointer" title="Ajouter un document">
+        <label class="btn btn-primary btn-sm" style="cursor:pointer">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Ajouter
           <input type="file" accept=".pdf,.docx,.pptx" style="display:none" onchange="Learn.uploadDoc(this)"/>
@@ -677,7 +849,7 @@ export class Learn {
     if (!file) return;
     const ext = file.name.split(".").pop().toLowerCase();
     if (!["pdf", "docx", "pptx"].includes(ext)) {
-      Learn._toast("Format non supporté. Utilisez PDF, DOCX ou PPTX.", "error");
+      Learn._toast("Format non supporté. PDF, DOCX ou PPTX.", "error");
       return;
     }
     if (file.size > 20 * 1024 * 1024) {
@@ -747,7 +919,7 @@ export class Learn {
   static _toast(msg, type = "success") {
     const icons = {
       success: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`,
-      error: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+      error: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="17" y1="7" x2="7" y2="17"/><line x1="7" y1="7" x2="17" y2="17"/></svg>`,
       info: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>`,
     };
     const tc = document.getElementById("toastContainer");

@@ -15,7 +15,7 @@ window.Combo = Combo;
 document.addEventListener("DOMContentLoaded", () => {
   UI.applyTheme(UI.getStoredTheme());
   App.init();
-  Learn.init();
+  Learn.init(); // crée window._pomo — doit rester avant Notes.init
   Notes.init();
   Combo.init();
 });

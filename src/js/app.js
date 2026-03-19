@@ -536,6 +536,14 @@ export class App {
 
     const sessions = Storage.getSessions();
     document.getElementById("statStudySessions").textContent = sessions.length;
+    const pomoTotal = parseInt(localStorage.getItem("upte_pomo_total") || "0");
+    const pomoH = Math.floor((pomoTotal * 25) / 60);
+    const pomoM = (pomoTotal * 25) % 60;
+    const pomoEl = document.getElementById("statPomoTotal");
+    const pomoHEl = document.getElementById("statPomoHours");
+    if (pomoEl) pomoEl.textContent = pomoTotal;
+    if (pomoHEl)
+      pomoHEl.textContent = `${pomoH}h${String(pomoM).padStart(2, "0")} travaillées`;
 
     // Météo académique
     this._renderWeatherBar(todaySlots, nowMin, totalHours);
@@ -824,8 +832,23 @@ export class App {
           const c = courseByCode(code);
           const color = courseColor(c);
           const pct = Math.round((hrs / maxHours) * 100);
+          const pomoTotalAll = parseInt(
+            localStorage.getItem("upte_pomo_total") || "0",
+          );
+          const pomoHrsAll = (pomoTotalAll * 25) / 60;
+          const totalCredits = courses.reduce(
+            (acc, x) => acc + (x.credits || 1),
+            0,
+          );
+          const pomoHrsUE =
+            totalCredits > 0
+              ? (pomoHrsAll * (c?.credits || 1)) / totalCredits
+              : 0;
           const target = (c?.credits || 1) * 3;
-          const coverage = Math.min(Math.round((hrs / target) * 100), 100);
+          const coverage = Math.min(
+            Math.round(((hrs + pomoHrsUE) / target) * 100),
+            100,
+          );
           return `<div class="revision-rate-item">
           <div class="rri-header">
             <span class="rri-code" style="color:${color};background:${color}18">${esc(code)}</span>

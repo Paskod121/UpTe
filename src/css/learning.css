@@ -78,9 +78,9 @@
 
 .pomo-time {
     font-family: "Syne", sans-serif;
-    font-size: 46px;
+    font-size: 40px;
     font-weight: 800;
-    letter-spacing: -2px;
+    letter-spacing: -1px;
     line-height: 1;
     transition: color .3s;
 }
@@ -150,30 +150,44 @@
 }
 
 .pomo-primary {
-    padding: 12px 28px;
+    padding: 14px 36px;
     font-size: 14px;
+    font-weight: 700;
     border: 2px solid;
     background: transparent;
+    letter-spacing: .3px;
+    min-width: 160px;
+    justify-content: center;
+    transition: all .2s;
 }
 
-.pomo-primary:hover {
-    filter: brightness(1.15);
-    transform: translateY(-1px);
+.pomo-primary:hover:not([disabled]) {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px #00000020;
 }
 
 .pomo-secondary {
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background: var(--surface2);
     color: var(--muted);
     border: 1px solid var(--border);
     justify-content: center;
+    transition: all .2s;
 }
 
-.pomo-secondary:hover {
-    background: var(--bg3);
+.pomo-secondary:hover:not([disabled]) {
+    background: var(--surface);
     color: var(--text);
+    border-color: var(--green3);
+    transform: scale(1.08);
+}
+
+.pomo-secondary[disabled] {
+    opacity: .3;
+    cursor: not-allowed;
 }
 
 /* ─── Stats ─── */

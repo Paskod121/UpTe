@@ -40,13 +40,12 @@
     <!-- Fullscreen API au lancement -->
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-        // Plein écran automatique si pas déjà en mode standalone
         const isStandalone =
           window.matchMedia("(display-mode: fullscreen)").matches ||
           window.matchMedia("(display-mode: standalone)").matches ||
           window.navigator.standalone;
 
-        if (!isStandalone && document.documentElement.requestFullscreen) {
+        if (isStandalone && document.documentElement.requestFullscreen) {
           document.documentElement.requestFullscreen().catch(() => {});
         }
       });
@@ -331,6 +330,22 @@
               <span id="currentDate"></span>
             </div>
 
+            <div
+              id="pomoTopbarIndicator"
+              style="
+                display: none;
+                align-items: center;
+                gap: 6px;
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 5px 10px;
+                cursor: pointer;
+              "
+              onclick="UI.navigate('learn')"
+              title="Pomodoro en cours — cliquer pour y accéder"
+            ></div>
+
             <button
               class="btn-fullscreen"
               id="btnFullscreen"
@@ -376,13 +391,35 @@
           </div>
         </div>
 
+        <div
+          style="
+            height: 2px;
+            background: transparent;
+            position: relative;
+            overflow: hidden;
+          "
+        >
+          <div
+            id="pomoTopbarBar"
+            style="
+              height: 100%;
+              width: 0%;
+              position: absolute;
+              left: 0;
+              top: 0;
+              transition: width 0.85s linear;
+              border-radius: 0;
+            "
+          ></div>
+        </div>
+
         <div class="content">
           <!-- DASHBOARD -->
           <div class="page active" id="page-dashboard">
             <!-- Bannière météo académique + countdown -->
             <div class="dash-weather-bar" id="dashWeatherBar"></div>
 
-            <!-- Stats grid existante -->
+            <!-- Stats grid -->
             <div class="stats-grid mb-6">
               <div class="stat-card">
                 <div class="stat-icon">
@@ -476,6 +513,29 @@
                 <div class="stat-value" id="statStudySessions">0</div>
                 <div class="stat-label">Sessions planifiées</div>
                 <div class="stat-sub up">révisions</div>
+              </div>
+
+              <div class="stat-card">
+                <div class="stat-icon">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="var(--green)"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  >
+                    <path
+                      d="M12 2c0 6-8 8-8 14a8 8 0 0 0 16 0c0-4-2-7-5-9 0 3-2 4-3 4 0-3-1-6 0-9z"
+                    />
+                  </svg>
+                </div>
+                <div class="stat-value" id="statPomoTotal">0</div>
+                <div class="stat-label">Sessions Pomodoro</div>
+                <div class="stat-sub neutral" id="statPomoHours">
+                  0h00 travaillées
+                </div>
               </div>
             </div>
 
