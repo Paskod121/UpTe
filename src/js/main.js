@@ -146,6 +146,81 @@ function scheduleDailyReminder() {
     );
   }, delay);
 }
+async function askNotifPermissionPremium() {
+  if (!("Notification" in window)) return false;
+  if (Notification.permission === "granted") return true;
+  if (Notification.permission === "denied") return false;
+
+  return new Promise((resolve) => {
+    // Modale UpTe premium
+    const overlay = document.createElement("div");
+    overlay.style.cssText = `
+      position:fixed;inset:0;background:#00000080;
+      display:flex;align-items:center;justify-content:center;
+      z-index:600;padding:20px;backdrop-filter:blur(6px);
+      animation:fadeIn .2s ease`;
+
+    overlay.innerHTML = `
+      <div style="
+        background:var(--surface);border:1px solid var(--border);
+        border-radius:var(--radius);padding:32px 28px;
+        max-width:380px;width:100%;box-shadow:var(--shadow);
+        text-align:center;animation:pageEnter .25s ease">
+        <div style="
+          width:56px;height:56px;border-radius:16px;
+          background:var(--green-dim);border:1px solid var(--green3);
+          display:flex;align-items:center;justify-content:center;
+          margin:0 auto 20px;color:var(--green)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </div>
+        <div style="
+          font-family:'Syne',sans-serif;font-weight:800;
+          font-size:18px;color:var(--text);margin-bottom:10px">
+          Reste informé
+        </div>
+        <div style="
+          font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:28px">
+          UpTe peut t'envoyer des rappels avant tes sessions de révision
+          et te notifier quand ton Pomodoro se termine.
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <button id="notifAccept" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px">
+            Activer les notifications
+          </button>
+          <button id="notifLater" class="btn btn-ghost" style="width:100%;justify-content:center">
+            Plus tard
+          </button>
+        </div>
+        <div style="margin-top:16px;font-size:11px;color:var(--muted2)">
+          Tu pourras modifier ce choix dans les paramètres du navigateur.
+        </div>
+      </div>`;
+
+    document.body.appendChild(overlay);
+
+    document.getElementById("notifAccept").onclick = async () => {
+      overlay.remove();
+      const result = await Notification.requestPermission();
+      resolve(result === "granted");
+    };
+
+    document.getElementById("notifLater").onclick = () => {
+      overlay.remove();
+      resolve(false);
+    };
+
+    overlay.onclick = (e) => {
+      if (e.target === overlay) {
+        overlay.remove();
+        resolve(false);
+      }
+    };
+  });
+}
 
 /* 
    INIT
@@ -158,7 +233,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   Combo.init();
 
   await registerSW();
-  const granted = await requestNotifPermission();
+  const granted = await askNotifPermissionPremium();
   if (granted) {
     scheduleSessionReminders();
     scheduleDailyReminder();

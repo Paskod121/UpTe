@@ -52,11 +52,20 @@
     </script>
 
     <link rel="manifest" href="manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="dns-prefetch" href="https://unpkg.com" />
+    <link rel="dns-prefetch" href="https://lottie.host" />
     <link
       href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap"
       rel="stylesheet"
     />
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <script
+      src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.3/dist/dotlottie-wc.js"
+      type="module"
+      defer
+    ></script>
     <link rel="stylesheet" href="src/css/main.css" />
 
     <!-- Charger le theme actuel en premier -->
@@ -73,9 +82,102 @@
             document.documentElement.setAttribute("data-theme", "light");
         } catch {}
       })();
+
+      // Splash — barre de progression
+      document.addEventListener("DOMContentLoaded", () => {
+        const bar = document.getElementById("splashBar");
+        if (bar) {
+          requestAnimationFrame(() => {
+            bar.style.width = "100%";
+          });
+          setTimeout(() => {
+            const splash = document.getElementById("splashScreen");
+            if (splash) {
+              splash.style.opacity = "0";
+              splash.style.transform = "scale(1.02)";
+              setTimeout(() => splash.remove(), 400);
+            }
+          }, 900);
+        }
+      });
     </script>
   </head>
   <body>
+    <div
+      id="splashScreen"
+      style="
+        position: fixed;
+        inset: 0;
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        gap: 16px;
+        transition:
+          opacity 0.4s ease,
+          transform 0.4s ease;
+      "
+    >
+      <div
+        style="
+          background: linear-gradient(
+            135deg,
+            var(--green3),
+            var(--accent-logo-end)
+          );
+          border-radius: 20px;
+          padding: 16px;
+          box-shadow: 0 8px 32px var(--green-glow);
+        "
+      >
+        <svg
+          width="36"
+          height="36"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="white"
+          stroke-width="2.5"
+          stroke-linecap="round"
+        >
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+          <path d="M6 12v5c3 3 9 3 12 0v-5" />
+        </svg>
+      </div>
+      <div
+        style="
+          font-family: &quot;Syne&quot;, sans-serif;
+          font-weight: 800;
+          font-size: 22px;
+          color: var(--text);
+          letter-spacing: -0.3px;
+        "
+      >
+        Up&#x25CF;Te
+      </div>
+      <div
+        style="
+          width: 32px;
+          height: 3px;
+          border-radius: 99px;
+          background: var(--border);
+          overflow: hidden;
+        "
+      >
+        <div
+          id="splashBar"
+          style="
+            height: 100%;
+            width: 0%;
+            background: var(--green);
+            border-radius: 99px;
+            transition: width 0.8s ease;
+          "
+        ></div>
+      </div>
+    </div>
+
     <div id="app" class="app">
       <div
         class="sidebar-overlay"

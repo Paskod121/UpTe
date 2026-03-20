@@ -9,8 +9,8 @@
 
   /* ─── Accent principal ─── */
   --green: #3dd68c;
-  --green2: #25c274;
-  --green3: #16a34a;
+  --green2: #1fc47a;
+  --green3: #0e9f6e;
   --green-dim: #3dd68c18;
   --green-glow: #3dd68c30;
 
@@ -31,12 +31,11 @@
   --radius-sm: 8px;
 
   /* ─── Sémantiques ─── */
-  --accent-logo-end: #0a6e2c;
-  --event-cours-bg-a: #16a34a70;
-  --event-cours-bg-b: #15803d58;
-  --event-cours-text: #bbf7d0;
-  --tip-bg-a: #16a34a14;
-  --tip-border: #16a34a30;
+  --accent-logo-end: #0a7550;
+  --event-cours-bg-a: #0e9f6e70;
+  --event-cours-bg-b: #0c8a5f58;
+  --tip-bg-a: #0e9f6e14;
+  --tip-border: #0e9f6e30;
 }
 
 /* ─── Thème Bleu ─── */
@@ -71,21 +70,21 @@
   --surface: #ffffff;
   --surface2: #e8ede6;
   --border: #d0d9cd;
-  --green: #16a34a;
-  --green2: #15803d;
-  --green3: #166534;
+  --green: #0e9f6e;
+  --green2: #0c8a5f;
+  --green3: #0a7550;
   --green-dim: #16a34a18;
   --green-glow: #16a34a30;
   --text: #1a2118;
   --muted: #5a6e57;
   --muted2: #8a9e87;
   --shadow: 0 8px 32px #00000018;
-  --accent-logo-end: #0d5c26;
-  --event-cours-bg-a: #16a34a30;
-  --event-cours-bg-b: #15803d20;
-  --event-cours-text: #14532d;
-  --tip-bg-a: #16a34a10;
-  --tip-border: #16a34a30;
+  --accent-logo-end: #0a7550;
+  --event-cours-bg-a: #0e9f6e30;
+  --event-cours-bg-b: #0c8a5f20;
+  --event-cours-text: #064e38;
+  --tip-bg-a: #0e9f6e10;
+  --tip-border: #0e9f6e30;
 }
 
 html {
@@ -119,4 +118,68 @@ html:-moz-full-screen::backdrop {
 
 html::backdrop {
   background: var(--bg);
+}
+
+/* ─── Sélection de texte ─── */
+::selection {
+  background: var(--green-dim);
+  color: var(--green);
+}
+
+/* ─── Curseur personnalisé desktop ─── */
+@media (pointer: fine) {
+  html { cursor: default; }
+
+  a, button, [onclick], label[for],
+  .nav-item, .tab, .doc-item,
+  .slot, .course-item, .session-item,
+  .cm-day, .wg-mobile-tab, .wg-mobile-slot,
+  .pomo-btn, .icon-btn, .ntb-btn,
+  .color-dot, .combo-option {
+    cursor: pointer;
+  }
+
+  input, textarea, [contenteditable] {
+    cursor: text;
+  }
+
+  :disabled, [disabled] {
+    cursor: not-allowed;
+  }
+}
+
+::-moz-selection {
+  background: var(--green-dim);
+  color: var(--green);
+}
+
+/* ─── Focus ring premium ─── */
+:focus-visible {
+  outline: 2px solid var(--green3);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* ─── Scrollbar premium ─── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--green3);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }

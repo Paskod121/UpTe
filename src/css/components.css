@@ -513,14 +513,16 @@
 }
 
 .confirm-icon {
-    width: 48px;
-    height: 48px;
-    margin: 0 auto 16px;
+    width: 52px;
+    height: 52px;
+    margin: 0 auto 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    border-radius: 16px;
     color: var(--green);
+    background: var(--green-dim);
+    border: 1px solid var(--green3);
 }
 
 .confirm-modal.danger .confirm-icon {
@@ -724,8 +726,12 @@
 /* ─── Empty state ─── */
 .empty-state {
     text-align: center;
-    padding: 40px 20px;
+    padding: 24px 20px;
     color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
 }
 
 .empty-icon {

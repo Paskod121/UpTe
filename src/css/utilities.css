@@ -1267,3 +1267,82 @@
   70%  { transform: scale(1.3); opacity: 1; }
   100% { transform: scale(1);   opacity: 1; }
 }
+
+/* ─── Toast card Pomodoro ─── */
+.toast-pomo-card {
+  padding: 0;
+  overflow: hidden;
+  min-width: 300px;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+
+.tpc-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px 10px;
+}
+
+.tpc-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tpc-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.tpc-title {
+  font-family: "Syne", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1;
+  margin-bottom: 3px;
+}
+
+.tpc-msg {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.tpc-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.tpc-next-label {
+  font-size: 11px;
+  color: var(--muted2);
+}
+
+.tpc-next-badge {
+  font-family: "Syne", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.tpc-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  transform-origin: left;
+  transition: transform 4s linear;
+}

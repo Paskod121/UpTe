@@ -215,6 +215,7 @@ export class Pomodoro {
     this._beep();
 
     if (this.mode === "work") {
+      this._showCelebration();
       this.round++;
       this.total++;
       localStorage.setItem("upte_pomo_total", this.total);
@@ -225,7 +226,8 @@ export class Pomodoro {
         nextMode: next,
       });
       this._setBadge(true);
-      if (window._notifyPomoDone) window._notifyPomoDone("work", MODES[next].label);
+      if (window._notifyPomoDone)
+        window._notifyPomoDone("work", MODES[next].label);
       this._switchMode(next);
     } else {
       const duration = MODES[this.mode].min;
@@ -245,6 +247,7 @@ export class Pomodoro {
     this.mode = mode;
     this.timeLeft = MODES[mode].min * 60;
     this._pickMsg();
+    this._updateTopbarIndicator();
     this._render();
   }
 
@@ -297,7 +300,9 @@ export class Pomodoro {
 
     // Barre de progression CSS (4s)
     requestAnimationFrame(() => {
-      el.querySelector(".tpc-bar").style.transform = "scaleX(0)";
+      requestAnimationFrame(() => {
+        el.querySelector(".tpc-bar").style.transform = "scaleX(0)";
+      });
     });
 
     // Fermeture au clic
@@ -366,6 +371,30 @@ export class Pomodoro {
     } catch {}
   }
 
+  _showCelebration() {
+    const existing = document.getElementById("pomoCelebration");
+    if (existing) existing.remove();
+
+    const el = document.createElement("div");
+    el.id = "pomoCelebration";
+    el.style.cssText = `
+      position:fixed;top:50%;left:50%;
+      transform:translate(-50%,-50%);
+      z-index:500;pointer-events:none;
+      animation:fadeIn .2s ease`;
+    el.innerHTML = `
+      <dotlottie-wc
+        src="https://lottie.host/6f71acbe-8499-4b6e-8051-c96da22f6b78/r6hpyOtJGF.json"
+        style="width:200px;height:200px"
+        autoplay>
+      </dotlottie-wc>`;
+    document.body.appendChild(el);
+
+    setTimeout(() => {
+      el.style.animation = "toast-out .3s ease forwards";
+      setTimeout(() => el.remove(), 300);
+    }, 2500);
+  }
   _pickMsg() {
     const pool = this.mode === "work" ? MSG_WORK : MSG_BREAK;
     this.msg = pool[Math.floor(Math.random() * pool.length)];
@@ -506,6 +535,8 @@ export class Pomodoro {
       this.timeLeft === MODES.work.min * 60;
     if (isIdle) {
       el.style.display = "none";
+      const bar = document.getElementById("pomoTopbarBar");
+      if (bar) { bar.style.width = "0%"; bar.style.transition = "none"; }
       return;
     }
     el.style.display = "flex";
@@ -527,6 +558,7 @@ export class Pomodoro {
       <span class="pti-dot ${this.running ? "running" : "paused"}"></span>`;
     const bar = document.getElementById("pomoTopbarBar");
     if (bar) {
+      bar.style.transition = "width 0.85s linear";
       bar.style.width = `${Math.round(this._progress() * 100)}%`;
       bar.style.background = m.color;
     }
@@ -821,8 +853,12 @@ export class Learn {
       <div id="docsList" class="docs-list">
         ${
           docs.length === 0
-            ? `<div class="empty-state" style="padding:30px 0">
-               <div class="empty-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            ? `<div class="empty-state" style="padding:20px 0">
+               <dotlottie-wc
+                 src="https://lottie.host/4ffb2db3-b960-4496-8564-a92a50be439d/padAaiksoo.json"
+                 style="width:120px;height:120px;margin:0 auto"
+                 autoplay loop>
+               </dotlottie-wc>
                <div class="empty-title">Aucun document</div>
                <div class="empty-sub">PDF, Word ou PowerPoint</div>
              </div>`

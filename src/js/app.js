@@ -575,7 +575,11 @@ export class App {
     const slotsEl = document.getElementById("todaySlots");
     if (todaySlots.length === 0) {
       slotsEl.innerHTML = `<div class="empty-state">
-        <div class="empty-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+        <dotlottie-wc
+          src="https://lottie.host/120c8f46-43f0-4dae-8316-e007e91bcf08/TVJt2QDpdi.lottie"
+          style="width:180px;height:180px;margin:0 auto"
+          autoplay loop>
+        </dotlottie-wc>
         <div class="empty-title">Pas de cours aujourd'hui</div>
         <div class="empty-sub">Profitez pour réviser !</div>
       </div>`;
@@ -840,10 +844,10 @@ export class App {
             (acc, x) => acc + (x.credits || 1),
             0,
           );
-          const pomoHrsUE =
-            totalCredits > 0
-              ? (pomoHrsAll * (c?.credits || 1)) / totalCredits
-              : 0;
+          const pomoHrsUE = totalCredits > 0;
+          totalCredits > 0
+            ? (pomoHrsAll * (c?.credits || 1)) / totalCredits
+            : 0;
           const target = (c?.credits || 1) * 3;
           const coverage = Math.min(
             Math.round(((hrs + pomoHrsUE) / target) * 100),
@@ -1335,7 +1339,11 @@ export class App {
     const el = document.getElementById("plannerSessionsList");
     if (sessions.length === 0) {
       el.innerHTML = `<div class="empty-state">
-        <div class="empty-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg></div>
+        <dotlottie-wc
+          src="https://lottie.host/33e21a78-f73c-4e5c-8b00-2b3a6dd3e0b7/gz4dErI8YE.json"
+          style="width:120px;height:120px;margin:0 auto;mix-blend-mode:screen;opacity:0.85"
+          autoplay loop>
+        </dotlottie-wc>
         <div class="empty-title">Aucune session de révision</div>
         <div class="empty-sub">Cliquez sur "+ Planifier" pour commencer</div>
       </div>`;
