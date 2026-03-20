@@ -503,7 +503,8 @@ body {
     }
 
     .topbar-title {
-        font-size: 15px;
+        font-size: 14px;
+        max-width: 120px;
     }
 
     .topbar-subtitle {
@@ -511,7 +512,15 @@ body {
     }
 
     .topbar-right {
-        gap: 8px;
+        gap: 6px;
+    }
+
+    #pomoTopbarIndicator {
+        display: none !important;
+    }
+
+    .date-chip {
+        display: none;
     }
 
     .date-chip {
@@ -552,6 +561,16 @@ body {
     .today-grid {
         gap: 16px;
         margin-bottom: 16px;
+    }
+
+    #notifBellBtn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .btn-fullscreen {
+        width: 32px;
+        height: 32px;
     }
 }
 

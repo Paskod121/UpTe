@@ -97,19 +97,40 @@
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translateX(20px);
+    transform: translateY(12px) scale(0.96);
   }
 
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0) scale(1);
   }
 }
 
 @keyframes toast-out {
   to {
     opacity: 0;
-    transform: translateX(20px);
+    transform: translateY(8px) scale(0.95);
+  }
+}
+
+@media (max-width: 900px) {
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.95);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes toast-out {
+    to {
+      opacity: 0;
+      transform: translateY(12px) scale(0.94);
+    }
   }
 }
 
@@ -132,6 +153,7 @@
     opacity: 0;
     transform: scale(0.97) translateY(6px);
   }
+
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -1127,9 +1149,20 @@
 /* ─── À ajouter à la fin de utilities.css ─── */
 
 @keyframes pomoBadgePop {
-  0%   { transform: scale(0.5); opacity: 0; }
-  70%  { transform: scale(1.3); opacity: 1; }
-  100% { transform: scale(1);   opacity: 1; }
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+
+  70% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* 
@@ -1224,13 +1257,27 @@
 /* ─── Animations ─── */
 
 @keyframes pomoBadgePop {
-  0%   { transform: scale(0.4); opacity: 0; }
-  65%  { transform: scale(1.3); }
-  100% { transform: scale(1);   opacity: 1; }
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+
+  65% {
+    transform: scale(1.3);
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* ─── Indicateur Pomodoro topbar ─── */
-.pti-ring { flex-shrink: 0; display: flex; align-items: center; }
+.pti-ring {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
 
 .pti-time {
   font-family: "Syne", sans-serif;
@@ -1257,15 +1304,33 @@
 }
 
 @keyframes ptiPulse {
-  0%, 100% { box-shadow: 0 0 0 2px var(--green-dim); }
-  50%       { box-shadow: 0 0 0 5px var(--green-dim); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px var(--green-dim);
+  }
+
+  50% {
+    box-shadow: 0 0 0 5px var(--green-dim);
+  }
 }
 
 /* ─── Badge et animations Pomodoro nav ─── */
 @keyframes pomoBadgePop {
-  0%   { transform: scale(0.4); opacity: 0; }
-  70%  { transform: scale(1.3); opacity: 1; }
-  100% { transform: scale(1);   opacity: 1; }
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+
+  70% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* ─── Toast card Pomodoro ─── */
