@@ -1,6 +1,7 @@
 "use strict";
 
 import { getActiveCourses, esc, courseColor, courseByCode } from "./utils.js";
+import { UI } from "./ui.js";
 
 /* 
    NOTES DB — IndexedDB

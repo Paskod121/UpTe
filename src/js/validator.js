@@ -102,10 +102,13 @@ export function validateCourse(data, prefix, origCode, existingCourses) {
   if (isEmpty(data.code)) {
     setFieldError(`${prefix}-code`, "Le code UE est requis.");
     valid = false;
-  } else if (!/^[A-Z0-9_]{2,12}$/.test(data.code)) {
+  } else if (
+    !/^[A-Z0-9_]{2,12}$/i.test(data.code) ||
+    data.code.trim().length < 2
+  ) {
     setFieldError(
       `${prefix}-code`,
-      "Code : 2–12 caractères, majuscules, chiffres ou _ uniquement.",
+      "Code : 2–12 caractères, lettres, chiffres ou _ uniquement.",
     );
     valid = false;
   } else {

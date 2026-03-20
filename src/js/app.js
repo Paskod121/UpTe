@@ -122,6 +122,22 @@ export class App {
     if (logoSub) logoSub.textContent = `${s.ecole} · ${s.universite}`;
     if (sidebarSem) sidebarSem.textContent = s.semestre;
     if (sidebarAnnee) sidebarAnnee.textContent = s.annee || "2025–2026";
+
+    const scheduleYear = document.getElementById("scheduleYearTag");
+    if (scheduleYear) scheduleYear.textContent = s.annee || "2025–2026";
+
+    const coursesTitle = document.getElementById("coursesPageTitle");
+    if (coursesTitle)
+      coursesTitle.textContent = `Toutes les UE — ${s.semestre}`;
+
+    const coursesCredits = document.getElementById("coursesCreditsTag");
+    if (coursesCredits) {
+      const total = getActiveCourses().reduce(
+        (sum, c) => sum + (c.credits || 0),
+        0,
+      );
+      coursesCredits.textContent = `${total} crédits`;
+    }
   }
 
   static renderSettings() {

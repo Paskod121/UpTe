@@ -530,6 +530,14 @@ async function askNotifPermissionPremium() {
 document.addEventListener("DOMContentLoaded", async () => {
   UI.applyTheme(UI.getStoredTheme());
   App.init();
+
+  // Gestion des shortcuts PWA
+  const params = new URLSearchParams(location.search);
+  const action = params.get("action");
+  const page = params.get("page");
+  if (action === "plan") UI.openModal("addStudy");
+  if (page) UI.navigate(page);
+
   Learn.init();
   Notes.init();
   Combo.init();
