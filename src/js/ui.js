@@ -13,7 +13,7 @@ const THEMES = [
 
 const THEME_META = {
   light: "#ffffff",
-  blue:  "#0a1628",
+  blue: "#0a1628",
   green: "#111510",
 };
 
@@ -331,7 +331,7 @@ export class UI {
       .join("");
     document.getElementById("tipsContent").innerHTML = `
       <div class="section-header mb-4">
-        <div class="section-title">Stratégies pour réussir le GL-S4</div>
+      <div class="section-title">Stratégies pour réussir — ${Storage.getSettings().parcours}</div>
         <div class="tag tag-green">10 conseils</div>
       </div>
       <div class="tips-columns">${html}</div>`;

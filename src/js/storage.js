@@ -33,7 +33,9 @@ export class Storage {
     ecole: "EPL",
     parcours: "Licence Pro GL",
     semestre: "Semestre 4",
+    annee: "2025–2026",
   };
+
   static getSettings() {
     try {
       const s = JSON.parse(localStorage.getItem(this.SETTINGS_KEY));
@@ -80,11 +82,16 @@ export class Storage {
       localStorage.setItem(this.COURSES_KEY, backup);
       localStorage.removeItem(this.COURSES_KEY + "_backup");
       return true;
-    } catch { return false; }
+    } catch {
+      return false;
+    }
   }
 
   static hasCoursesBackup() {
-    try { return !!localStorage.getItem(this.COURSES_KEY + "_backup"); }
-    catch { return false; }
+    try {
+      return !!localStorage.getItem(this.COURSES_KEY + "_backup");
+    } catch {
+      return false;
+    }
   }
 }

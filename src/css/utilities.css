@@ -1411,3 +1411,7 @@
   transform-origin: left;
   transition: transform 4s linear;
 }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

@@ -87,6 +87,8 @@ export class Combo {
     const wrap = document.getElementById(wrapId);
     if (wrap) wrap.classList.remove("open");
     this._activeId = null;
+    if (input) input.value = value;
+    window.App?._updateSettingsBtn(); // ← ajoute cette ligne
   }
 
   static _closeAll() {

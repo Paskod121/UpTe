@@ -138,9 +138,35 @@ export class App {
       if (el) el.value = val;
     });
     this._renderSettingsCourseList();
+
+    // Snapshot APRÈS avoir rempli les champs
+    this._settingsSnapshot = JSON.stringify({
+      universite: s.universite,
+      ecole: s.ecole,
+      parcours: s.parcours,
+      semestre: s.semestre,
+      annee: s.annee || "2025–2026",
+    });
+    // Bouton désactivé par défaut au chargement
+    const btn = document.querySelector("#page-settings .btn-primary");
+    if (btn) {
+      btn.disabled = true;
+      btn.style.opacity = "0.45";
+      btn.style.cursor = "not-allowed";
+    }
   }
 
   static saveSettings() {
+    const btn = document.querySelector("#page-settings .btn-primary");
+
+    // Anti-spam
+    if (btn?.disabled) return;
+    if (btn) {
+      btn.disabled = true;
+      btn.style.opacity = "0.7";
+      btn.style.cursor = "not-allowed";
+    }
+
     const data = {
       universite: document.getElementById("set-universite").value.trim(),
       ecole: document.getElementById("set-ecole").value.trim(),
@@ -148,10 +174,75 @@ export class App {
       semestre: document.getElementById("set-semestre").value.trim(),
       annee: document.getElementById("set-annee")?.value.trim() || "2025–2026",
     };
-    if (!validateSettings(data)) return;
-    Storage.saveSettings(data);
-    this.applySettings();
-    UI.toast("Paramètres enregistrés.", "success");
+
+    if (!validateSettings(data)) {
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        btn.style.cursor = "";
+      }
+      return;
+    }
+
+    // Illusion de chargement
+    const originalHTML = btn?.innerHTML;
+    if (btn)
+      btn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+        style="animation:spin .7s linear infinite">
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+      </svg>
+      Enregistrement…`;
+
+    setTimeout(() => {
+      Storage.saveSettings(data);
+      this._settingsSnapshot = JSON.stringify(data);
+      this.applySettings();
+
+      // Restore button — désactivé car plus de changement
+      if (btn) {
+        btn.innerHTML = originalHTML;
+        btn.disabled = true;
+        btn.style.opacity = "0.45";
+        btn.style.cursor = "not-allowed";
+      }
+
+      // Toast premium anti-spam
+      document.querySelectorAll(".toast-settings").forEach((t) => {
+        t.style.animation = "toast-out .2s ease forwards";
+        setTimeout(() => t.remove(), 200);
+      });
+
+      const tc = document.getElementById("toastContainer");
+      const el = document.createElement("div");
+      el.className = "toast success toast-settings";
+      el.style.cssText =
+        "min-width:260px;display:flex;align-items:center;gap:12px";
+      el.innerHTML = `
+        <div style="
+          width:34px;height:34px;border-radius:10px;flex-shrink:0;
+          background:var(--green-dim);border:1px solid var(--green3);
+          display:flex;align-items:center;justify-content:center;color:var(--green)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;
+            color:var(--text);margin-bottom:2px">Paramètres enregistrés</div>
+          <div style="font-size:11px;color:var(--muted);white-space:nowrap;
+            overflow:hidden;text-overflow:ellipsis">
+            ${esc(data.parcours)} · ${esc(data.semestre)} · ${esc(data.annee)}
+          </div>
+        </div>`;
+      tc.appendChild(el);
+      setTimeout(() => {
+        el.style.animation = "toast-out .3s ease forwards";
+        setTimeout(() => el.remove(), 300);
+      }, 2500);
+    }, 800);
   }
 
   /* ══════ SETTINGS — CRUD Cours ══════ */
@@ -844,10 +935,11 @@ export class App {
             (acc, x) => acc + (x.credits || 1),
             0,
           );
-          const pomoHrsUE = totalCredits > 0;
-          totalCredits > 0
-            ? (pomoHrsAll * (c?.credits || 1)) / totalCredits
-            : 0;
+          const pomoHrsUE =
+            totalCredits > 0
+              ? (pomoHrsAll * (c?.credits || 1)) / totalCredits
+              : 0;
+
           const target = (c?.credits || 1) * 3;
           const coverage = Math.min(
             Math.round(((hrs + pomoHrsUE) / target) * 100),
@@ -1407,5 +1499,21 @@ export class App {
         .join("");
     }
     UI.renderMiniCalendar(todayStr(), null);
+  }
+
+  static _updateSettingsBtn() {
+    const btn = document.querySelector("#page-settings .btn-primary");
+    if (!btn) return;
+    const current = JSON.stringify({
+      universite: document.getElementById("set-universite")?.value.trim(),
+      ecole: document.getElementById("set-ecole")?.value.trim(),
+      parcours: document.getElementById("set-parcours")?.value.trim(),
+      semestre: document.getElementById("set-semestre")?.value.trim(),
+      annee: document.getElementById("set-annee")?.value.trim(),
+    });
+    const changed = current !== this._settingsSnapshot;
+    btn.disabled = !changed;
+    btn.style.opacity = changed ? "1" : "0.45";
+    btn.style.cursor = changed ? "" : "not-allowed";
   }
 }
