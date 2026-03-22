@@ -528,6 +528,28 @@ function _launchApp() {
   if (Auth.isAuthenticated()) {
     document.getElementById("sidebarAuthBtn")?.remove();
   }
+
+  // Affiche le profil si connecté
+  if (Auth.isAuthenticated()) {
+    const card = document.getElementById("sidebarUserCard");
+    const name = document.getElementById("sidebarUserName");
+    const email = document.getElementById("sidebarUserEmail");
+    const avatar = document.getElementById("sidebarAvatar");
+    const initials = document.getElementById("sidebarAvatarInitials");
+
+    if (card) card.style.display = "flex";
+    if (name) name.textContent = Auth.getDisplayName();
+    if (email) email.textContent = Auth.user.email;
+
+    const avatarUrl = Auth.getAvatar();
+    if (avatarUrl && avatar) {
+      avatar.src = avatarUrl;
+      avatar.style.display = "block";
+      if (initials) initials.style.display = "none";
+    } else if (initials) {
+      initials.textContent = Auth.getDisplayName().charAt(0).toUpperCase();
+    }
+  }
 }
 
 function _scheduleAuthPrompts() {
@@ -562,15 +584,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     _scheduleAuthPrompts();
     // Affiche le bouton de connexion dans la sidebar
   } else {
-    const isNewLogin = window.location.hash.includes("access_token") 
-    || window.location.search.includes("code=")
-    || document.referrer.includes("accounts.google.com")
-    || document.referrer.includes("supabase.co");
-  
-  if (isNewLogin) {
-    window.history.replaceState({}, document.title, window.location.pathname);
-    AuthScreen.show();
-    AuthScreen._renderOnboarding(Auth.getDisplayName());
+    const isNewLogin =
+      window.location.hash.includes("access_token") ||
+      window.location.search.includes("code=") ||
+      document.referrer.includes("accounts.google.com") ||
+      document.referrer.includes("supabase.co");
+
+    if (isNewLogin) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      AuthScreen.show();
+      AuthScreen._renderOnboarding(Auth.getDisplayName());
     } else {
       _launchApp();
     }
