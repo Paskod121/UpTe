@@ -147,7 +147,8 @@ export const Auth = {
       .select("id")
       .eq("id", this.user.id)
       .single();
-
+    
+    this._isNewUser = true;
     if (!data) {
       await sb.from("users").insert({
         id: this.user.id,
@@ -157,6 +158,7 @@ export const Auth = {
       });
       await sb.from("settings").insert({ user_id: this.user.id });
     }
+    else { this._isNewUser = false; }
 
     // Met à jour last_seen_at
     await sb

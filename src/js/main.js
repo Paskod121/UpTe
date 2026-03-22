@@ -625,8 +625,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       } else if (!window._appLaunched) {
         // Supabase a consommé le hash avant nous
         // → premier login via redirect Google
-        AuthScreen.show();
-        AuthScreen._renderOnboarding(Auth.getDisplayName());
+        if (Auth._isNewUser) {
+          AuthScreen.show();
+          AuthScreen._renderOnboarding(Auth.getDisplayName());
+        } else {
+          _launchApp();
+        }
       }
     }
 

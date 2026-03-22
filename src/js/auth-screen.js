@@ -67,7 +67,8 @@ export const AuthScreen = {
       pomodoro: {
         icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
         title: "Sauvegarde ta progression",
-        text: "Tu as complété plusieurs sessions Pomodoro. Connecte-toi pour ne jamais perdre ta progression et accéder depuis n'importe quel appareil.",        cta: "Sauvegarder ma progression",
+        text: "Tu as complété plusieurs sessions Pomodoro. Connecte-toi pour ne jamais perdre ta progression et accéder depuis n'importe quel appareil.",
+        cta: "Sauvegarder ma progression",
       },
       share: {
         icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`,
@@ -467,7 +468,9 @@ export const AuthScreen = {
   _renderOnboarding(name) {
     this._step = "onboarding";
     this._onboardingData = {};
-    if (!this._el) { this.show(); }
+    if (!this._el) {
+      this.show();
+    }
 
     this._el.innerHTML = `
       <div style="
@@ -755,6 +758,8 @@ export const AuthScreen = {
     };
 
     Storage.saveSettings(settings);
+    window.App?.applySettings();
+    window.App?._renderProfileCard?.();
 
     // Met à jour le profil Supabase
     if (Auth.isAuthenticated()) {
@@ -994,9 +999,7 @@ export const AuthScreen = {
         <div style="flex:1">
           <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;
             color:var(--text);margin-bottom:2px">
-            ${
-              name ? MESSAGES.googleSuccess(name) : MESSAGES.otpSuccess
-            }
+            ${name ? MESSAGES.googleSuccess(name) : MESSAGES.otpSuccess}
           </div>
           <div style="font-size:11px;color:var(--muted)">Synchronisation en cours…</div>
         </div>`;
@@ -1024,6 +1027,31 @@ export const AuthScreen = {
       window.Combo?.init();
       window.NotifCenter?.init();
       window.Sync?.syncToSupabase();
+
+      // Met à jour la sidebar avec les infos du compte
+      const card = document.getElementById("sidebarUserCard");
+      const name = document.getElementById("sidebarUserName");
+      const email = document.getElementById("sidebarUserEmail");
+      const avatar = document.getElementById("sidebarAvatar");
+      const initials = document.getElementById("sidebarAvatarInitials");
+
+      if (card) card.style.display = "flex";
+      if (name) name.textContent = window.Auth?.getDisplayName() || "";
+      if (email) email.textContent = window.Auth?.user?.email || "";
+
+      const avatarUrl = window.Auth?.getAvatar();
+      if (avatarUrl && avatar) {
+        avatar.src = avatarUrl;
+        avatar.style.display = "block";
+        if (initials) initials.style.display = "none";
+      } else if (initials) {
+        initials.textContent = (window.Auth?.getDisplayName() || "?")
+          .charAt(0)
+          .toUpperCase();
+      }
+
+      // Cache le bouton Se connecter
+      document.getElementById("sidebarAuthBtn")?.remove();
     }
   },
 };

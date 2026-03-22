@@ -219,6 +219,12 @@ export class App {
       this._settingsSnapshot = JSON.stringify(data);
       this.applySettings();
 
+      // Sync vers Supabase si connecté
+      if (window.Auth?.isAuthenticated()) {
+        window.Sync?.syncToSupabase();
+        this._renderProfileCard();
+      }
+
       // Restore button — désactivé car plus de changement
       if (btn) {
         btn.innerHTML = originalHTML;
