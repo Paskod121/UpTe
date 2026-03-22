@@ -2,6 +2,7 @@
 
 import { Storage } from "./storage.js";
 import { UI } from "./ui.js";
+import { Auth } from "./auth.js";
 import {
   COURSES_DATA,
   DAYS,
@@ -153,6 +154,8 @@ export class App {
       const el = document.getElementById(id);
       if (el) el.value = val;
     });
+
+    this._renderProfileCard();
     this._renderSettingsCourseList();
 
     // Snapshot APRÈS avoir rempli les champs
@@ -1515,6 +1518,133 @@ export class App {
         .join("");
     }
     UI.renderMiniCalendar(todayStr(), null);
+  }
+
+  static _renderProfileCard() {
+    const el = document.getElementById("settingsProfileCard");
+    if (!el) return;
+
+    if (!Auth.isAuthenticated()) {
+      el.innerHTML = `
+        <div style="display:flex;align-items:center;gap:14px;padding:4px 0">
+          <div style="width:48px;height:48px;border-radius:14px;
+            background:var(--surface2);border:1.5px dashed var(--border);
+            display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--muted2)">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div style="flex:1">
+            <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:14px;
+              color:var(--text);margin-bottom:4px">Pas encore connecté</div>
+            <div style="font-size:12px;color:var(--muted)">
+              Connecte-toi pour synchroniser tes données
+            </div>
+          </div>
+          <button onclick="AuthScreen.show()" style="
+            padding:8px 14px;background:var(--green3);border:none;
+            border-radius:10px;font-family:'Syne',sans-serif;
+            font-weight:700;font-size:12px;color:#fff;cursor:pointer;
+            white-space:nowrap;transition:opacity .2s;flex-shrink:0;
+          " onmouseenter="this.style.opacity='.85'" onmouseleave="this.style.opacity='1'">
+            Se connecter
+          </button>
+        </div>`;
+      return;
+    }
+
+    const name = Auth.getDisplayName();
+    const email = Auth.user?.email || "";
+    const avatarUrl = Auth.getAvatar();
+    const initial = name.charAt(0).toUpperCase();
+    const s = Storage.getSettings();
+
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <!-- Avatar -->
+        <div style="position:relative;flex-shrink:0">
+          ${
+            avatarUrl
+              ? `<img src="${avatarUrl}" style="
+                width:56px;height:56px;border-radius:16px;
+                object-fit:cover;border:2px solid var(--green3);"/>`
+              : `<div style="
+                width:56px;height:56px;border-radius:16px;
+                background:linear-gradient(135deg,var(--green3),var(--accent-logo-end));
+                display:flex;align-items:center;justify-content:center;
+                font-family:'Syne',sans-serif;font-weight:800;font-size:22px;color:#fff;">
+                ${initial}
+              </div>`
+          }
+          <div style="
+            position:absolute;bottom:-4px;right:-4px;
+            width:18px;height:18px;border-radius:50%;
+            background:var(--green);border:2px solid var(--surface);
+            display:flex;align-items:center;justify-content:center;">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
+              stroke="#fff" stroke-width="3" stroke-linecap="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+        </div>
+  
+        <!-- Infos -->
+        <div style="flex:1;min-width:0">
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:16px;
+            color:var(--text);margin-bottom:2px;
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            ${esc(name)}
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px;
+            white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+            ${esc(email)}
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="
+              font-size:11px;font-weight:600;
+              color:var(--green);background:var(--green-dim);
+              border:1px solid var(--green3);
+              border-radius:6px;padding:2px 8px;">
+              ${esc(s.parcours)}
+            </span>
+            <span style="
+              font-size:11px;color:var(--muted);
+              background:var(--surface2);border:1px solid var(--border);
+              border-radius:6px;padding:2px 8px;">
+              ${esc(s.semestre)}
+            </span>
+          </div>
+        </div>
+  
+        <!-- Déconnexion -->
+        <button onclick="App._signOut()" style="
+          padding:8px 14px;background:none;
+          border:1.5px solid var(--border);
+          border-radius:10px;font-family:'Syne',sans-serif;
+          font-weight:600;font-size:12px;color:var(--muted);
+          cursor:pointer;white-space:nowrap;flex-shrink:0;
+          transition:all .2s;
+        "
+          onmouseenter="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+          onmouseleave="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+          Déconnexion
+        </button>
+      </div>`;
+  }
+
+  static async _signOut() {
+    UI.confirm({
+      message: "Tu seras déconnecté de ton compte UpTe.",
+      title: "Se déconnecter",
+      confirmText: "Déconnexion",
+      cancelText: "Annuler",
+      icon: "warning",
+      danger: true,
+    }).then(async (ok) => {
+      if (!ok) return;
+      await Auth.signOut();
+    });
   }
 
   static _updateSettingsBtn() {
