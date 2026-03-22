@@ -68,7 +68,7 @@ self.addEventListener("fetch", (e) => {
         .catch(() => {
           // Fallback — renvoie index.html pour la navigation
           if (e.request.destination === "document") {
-            return caches.match("/index.html");
+            return caches.match("/UpTe/index.html");
           }
         });
     }),

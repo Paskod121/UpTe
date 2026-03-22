@@ -7,8 +7,16 @@ import { Notes } from "./notes.js";
 import { Combo } from "./combo.js";
 import { Storage } from "./storage.js";
 import { getActiveCourses } from "./utils.js";
+import { Auth } from "./auth.js";
+import { Sync } from "./sync.js";
+import { AuthScreen } from "./auth-screen.js";
 
 window.App = App;
+
+window.Auth = Auth;
+window.Sync = Sync;
+window.AuthScreen = AuthScreen;
+
 window.UI = UI;
 window.Learn = Learn;
 window.Notes = Notes;
@@ -107,60 +115,40 @@ window.NotifCenter = {
     const isMobile = window.innerWidth <= 768;
 
     if (isMobile) {
-      // Déplace le panel dans <body> une seule fois
-      // Ainsi il est totalement hors du stacking context de #app / topbar
       if (!this._panelMoved) {
         document.body.appendChild(panel);
         this._panelMoved = true;
       }
 
-      // Overlay sombre simple — sans backdrop-filter
       document.getElementById("notifOverlay")?.remove();
       const overlay = document.createElement("div");
       overlay.id = "notifOverlay";
       overlay.style.cssText = `
-        position:fixed;inset:0;
-        z-index:1000;
+        position:fixed;inset:0;z-index:1000;
         background:rgba(0,0,0,0.4);
-        backdrop-filter:blur(6px);
-        -webkit-backdrop-filter:blur(6px);
+        backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
         animation:fadeIn .2s ease;
       `;
       overlay.addEventListener("click", () => this._closePanel());
       document.body.style.overflow = "hidden";
       document.body.appendChild(overlay);
 
-      // Panel au-dessus de l'overlay, propre
       panel.style.cssText = `
-        display:block;
-        position:fixed;
-        top:58px;
-        left:12px;
-        right:12px;
-        width:auto;
-        background:var(--surface);
-        border:1px solid var(--border);
-        border-radius:var(--radius);
-        box-shadow:var(--shadow);
-        z-index:1001;
-        overflow:hidden;
+        display:block;position:fixed;
+        top:58px;left:12px;right:12px;width:auto;
+        background:var(--surface);border:1px solid var(--border);
+        border-radius:var(--radius);box-shadow:var(--shadow);
+        z-index:1001;overflow:hidden;
         max-height:calc(100vh - 80px);
         animation:pageEnter .2s ease;
       `;
     } else {
-      // Desktop — comportement original inchangé
       panel.style.cssText = `
-        display:block;
-        position:absolute;
-        top:calc(100% + 8px);
-        right:0;
-        width:320px;
-        background:var(--surface);
-        border:1px solid var(--border);
-        border-radius:var(--radius);
-        box-shadow:var(--shadow);
-        z-index:500;
-        overflow:hidden;
+        display:block;position:absolute;
+        top:calc(100% + 8px);right:0;width:320px;
+        background:var(--surface);border:1px solid var(--border);
+        border-radius:var(--radius);box-shadow:var(--shadow);
+        z-index:500;overflow:hidden;
         animation:pageEnter .2s ease;
       `;
 
@@ -193,7 +181,6 @@ window.NotifCenter = {
       scrollbar-width:thin;
       scrollbar-color:var(--border) transparent;
       overscroll-behavior:contain;
-
     `;
 
     if (list.length === 0) {
@@ -527,21 +514,102 @@ async function askNotifPermissionPremium() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  UI.applyTheme(UI.getStoredTheme());
+/* ── Fonction pour lancer l'app après auth ── */
+function _launchApp() {
+  window._appLaunched = true;
   App.init();
-
-  // Gestion des shortcuts PWA
-  const params = new URLSearchParams(location.search);
-  const action = params.get("action");
-  const page = params.get("page");
-  if (action === "plan") UI.openModal("addStudy");
-  if (page) UI.navigate(page);
-
   Learn.init();
   Notes.init();
   Combo.init();
   NotifCenter.init();
+  Sync.syncToSupabase();
+
+  // Cache le bouton si déjà connecté
+  if (Auth.isAuthenticated()) {
+    document.getElementById("sidebarAuthBtn")?.remove();
+  }
+}
+
+function _scheduleAuthPrompts() {
+  const REASONS = ["general", "promo", "pomodoro", "share"];
+  const DELAYS = [5000, 60000, 120000, 300000];
+  let shownCount = 0;
+  if (localStorage.getItem("upte_auth_prompted_done")) return;
+
+  const show = () => {
+    if (Auth.isAuthenticated()) return;
+    if (document.getElementById("authContextModal")) return;
+    const reason = REASONS[shownCount % REASONS.length];
+    AuthScreen.showContextualPrompt(reason);
+    shownCount++;
+    if (shownCount < DELAYS.length) {
+      setTimeout(show, DELAYS[shownCount]);
+    }
+  };
+
+  setTimeout(show, DELAYS[0]);
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  UI.applyTheme(UI.getStoredTheme());
+  Sync.init();
+
+  const user = await Auth.init();
+
+  if (!user) {
+    // On force pas — app accessible directement
+    _launchApp();
+    _scheduleAuthPrompts();
+    // Affiche le bouton de connexion dans la sidebar
+  } else {
+    if (window.location.hash.includes("access_token") || window.location.hash.includes("type=signup")) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      // Montre l'onboarding dans l'écran auth
+      AuthScreen.show();
+      AuthScreen._renderOnboarding(Auth.getDisplayName());
+    } else {
+      _launchApp();
+    }
+  }
+
+  /* ── Fix boucle Google OAuth ──
+     onAuthStateChange se déclenche à chaque rechargement si le hash
+     #access_token est dans l'URL. On nettoie l'URL immédiatement
+     et on vérifie que l'écran auth est encore visible avant d'agir. */
+  Auth.onChange(async (event, session) => {
+    if (event === "SIGNED_IN") {
+      localStorage.setItem("upte_auth_prompted_done", "1");
+      // Nettoie le hash de l'URL sans recharger la page
+      if (window.location.hash.includes("access_token")) {
+        window.history.replaceState(
+          {},
+          document.title,
+          window.location.pathname,
+        );
+      }
+
+      // Lance l'app uniquement si l'écran auth est encore visible
+      document.getElementById("sidebarAuthBtn")?.remove();
+
+      if (document.getElementById("authScreen")) {
+        if (AuthScreen._step !== "onboarding") {
+          AuthScreen._renderWebAuthn(Auth.getDisplayName());
+        }
+      } else if (!window._appLaunched) {
+        // Supabase a consommé le hash avant nous
+        // → premier login via redirect Google
+        AuthScreen.show();
+        AuthScreen._renderOnboarding(Auth.getDisplayName());
+      }
+    }
+
+    if (event === "SIGNED_OUT") {
+      // Recharge l'écran de connexion
+      window.location.reload();
+    }
+  });
+
   await registerSW();
   const granted = await askNotifPermissionPremium();
   if (granted) {

@@ -24,7 +24,15 @@ export const MONTHS = [
   "Novembre",
   "Décembre",
 ];
-export const WEEK_DAYS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+export const WEEK_DAYS = [
+  "Lundi",
+  "Mardi",
+  "Mercredi",
+  "Jeudi",
+  "Vendredi",
+  "Samedi",
+  "Dimanche",
+];
 
 export const COURSES_DATA = [
   {
