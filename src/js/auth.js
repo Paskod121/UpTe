@@ -54,7 +54,7 @@ export const Auth = {
       email: email.trim().toLowerCase(),
       options: {
         shouldCreateUser: true,
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: `${window.location.href.split('#')[0].split('?')[0]}`,
       },
     });
     if (error) throw error;
