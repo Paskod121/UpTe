@@ -769,7 +769,7 @@ export class App {
     if (activeSlot) {
       mood = "active";
       icon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
-      label = `Cours en cours — ${esc(activeSlot.course.name)}`;
+      label = `Session en cours — ${esc(activeSlot.course.name)}`;
       sub = `jusqu'à ${activeSlot.end}`;
     } else if (nextSlot) {
       const diff = timeToMin(nextSlot.start) - nowMin;
