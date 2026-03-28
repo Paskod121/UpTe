@@ -197,6 +197,10 @@
   margin-top: 24px;
 }
 
+.mt-6 {
+  margin-top: 24px;
+}
+
 /* ─── Settings — liste des cours ─── */
 .settings-course-item {
   display: flex;
@@ -1029,7 +1033,7 @@
   margin-top: 1px;
 }
 
-/* ─── Slot progress bar (Session en cours) ─── */
+/* ─── Slot progress bar (cours EN COURS) ─── */
 .slot-progress-bar {
   height: 3px;
   background: var(--border);

@@ -1018,6 +1018,12 @@ export const AuthScreen = {
     /* ── Pull données depuis Supabase ── */
     await window.Sync?.syncFromSupabase();
 
+    if (window._appLaunched) {
+      window.App?.renderDashboard();
+      window.App?.renderCourseList();
+      window.App?.applySettings();
+    }
+
     /* ── Lance l'app complète ── */
     if (window.App && !window._appLaunched) {
       window._appLaunched = true;
@@ -1030,13 +1036,13 @@ export const AuthScreen = {
 
       // Met à jour la sidebar avec les infos du compte
       const card = document.getElementById("sidebarUserCard");
-      const name = document.getElementById("sidebarUserName");
+      const nameEl = document.getElementById("sidebarUserName");
       const email = document.getElementById("sidebarUserEmail");
       const avatar = document.getElementById("sidebarAvatar");
       const initials = document.getElementById("sidebarAvatarInitials");
 
       if (card) card.style.display = "flex";
-      if (name) name.textContent = window.Auth?.getDisplayName() || "";
+      if (name) nameEl.textContent = window.Auth?.getDisplayName() || "";
       if (email) email.textContent = window.Auth?.user?.email || "";
 
       const avatarUrl = window.Auth?.getAvatar();
