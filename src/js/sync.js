@@ -2,6 +2,7 @@
 
 import { Auth } from "./auth.js";
 import { Storage } from "./storage.js";
+import { getSupabaseClient } from "./supabase.js";
 
 /* ─── File d'attente offline ─── */
 const QUEUE_KEY = "upte_sync_queue";
@@ -26,8 +27,6 @@ function enqueue(action) {
   saveQueue(q);
 }
 
-/* ─── Client Supabase ─── */
-import { getSupabaseClient } from "./supabase.js";
 async function sb() {
   return getSupabaseClient();
 }
@@ -40,8 +39,9 @@ export const Sync = {
   init() {
     window.addEventListener("online", () => {
       this._online = true;
-      this.flushQueue();
-      this._showSyncToast();
+      void this.flushQueue().then((didSync) => {
+        if (didSync) this._showSyncToast();
+      });
     });
     window.addEventListener("offline", () => {
       this._online = false;
@@ -52,9 +52,10 @@ export const Sync = {
     return this._online && navigator.onLine;
   },
 
-  /* ── Push localStorage → Supabase ── */
+  /* ── Push localStorage → Supabase
+      Retourne true (ok), false (échec), null (ignoré : pas auth / hors ligne / sync déjà en cours). ── */
   async syncToSupabase() {
-    if (!Auth.isAuthenticated() || !this.isOnline() || this._syncing) return;
+    if (!Auth.isAuthenticated() || !this.isOnline() || this._syncing) return null;
     this._syncing = true;
 
     try {
@@ -124,8 +125,10 @@ export const Sync = {
         sessions: sessions.length,
         courses: customCourses?.length || 0,
       });
+      return true;
     } catch (err) {
       console.error("Sync error:", err);
+      return false;
     } finally {
       this._syncing = false;
     }
@@ -165,20 +168,22 @@ export const Sync = {
         .select("*")
         .eq("user_id", uid);
 
-      if (customCourses.length > 0) {
-        await client.from("courses").upsert(
-          customCourses.map((c) => ({
-            user_id: uid,
+      if (courses && courses.length > 0) {
+        Storage.saveCustomCourses(
+          courses.map((c) => ({
             code: c.code,
             name: c.name,
             credits: c.credits,
             prof: c.prof || "",
             salle: c.salle || "",
             color: c.color,
-            schedules: c.schedules,
+            schedules: c.schedules ?? [],
           })),
-          { onConflict: "user_id" },
         );
+      } else if (Array.isArray(courses) && courses.length === 0) {
+        try {
+          localStorage.removeItem(Storage.COURSES_KEY);
+        } catch {}
       }
 
       /* Sessions */
@@ -266,13 +271,21 @@ export const Sync = {
 
       document.getElementById("migrateYes").onclick = async () => {
         overlay.remove();
-        await this.syncToSupabase();
-        await Auth.log("migration.import", "sync", Auth.user.id, {
-          sessions: sessions.length,
-          courses: courses?.length || 0,
-        });
-        window.UI?.toast("Données importées dans ton compte.", "success");
-        resolve(true);
+        const ok = await this.syncToSupabase();
+        if (ok === true) {
+          await Auth.log("migration.import", "sync", Auth.user.id, {
+            sessions: sessions.length,
+            courses: courses?.length || 0,
+          });
+          window.UI?.toast("Données importées dans ton compte.", "success");
+          resolve(true);
+        } else {
+          window.UI?.toast(
+            "La synchronisation a échoué. Vérifie ta connexion et réessaie depuis les paramètres.",
+            "error",
+          );
+          resolve(false);
+        }
       };
 
       document.getElementById("migrateNo").onclick = () => {
@@ -287,18 +300,15 @@ export const Sync = {
     enqueue(action);
   },
 
+  /** Retourne true si une synchro a réussi après une file non vide. */
   async flushQueue() {
-    if (!Auth.isAuthenticated() || !this.isOnline()) return;
+    if (!Auth.isAuthenticated() || !this.isOnline()) return false;
     const queue = getQueue();
-    if (queue.length === 0) return;
+    if (queue.length === 0) return false;
 
-    for (const action of queue) {
-      try {
-        await this.syncToSupabase();
-        break;
-      } catch {}
-    }
-    saveQueue([]);
+    const ok = await this.syncToSupabase();
+    if (ok === true) saveQueue([]);
+    return ok === true;
   },
 
   /* ── Toast sync discret ── */

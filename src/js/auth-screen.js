@@ -1042,7 +1042,7 @@ export const AuthScreen = {
       const initials = document.getElementById("sidebarAvatarInitials");
 
       if (card) card.style.display = "flex";
-      if (name) nameEl.textContent = window.Auth?.getDisplayName() || "";
+      if (nameEl) nameEl.textContent = window.Auth?.getDisplayName() || "";
       if (email) email.textContent = window.Auth?.user?.email || "";
 
       const avatarUrl = window.Auth?.getAvatar();

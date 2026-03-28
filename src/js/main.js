@@ -6,7 +6,7 @@ import { Learn } from "./learn.js";
 import { Notes } from "./notes.js";
 import { Combo } from "./combo.js";
 import { Storage } from "./storage.js";
-import { getActiveCourses } from "./utils.js";
+import { getActiveCourses, esc } from "./utils.js";
 import { Auth } from "./auth.js";
 import { Sync } from "./sync.js";
 import { AuthScreen } from "./auth-screen.js";
@@ -230,7 +230,7 @@ window.NotifCenter = {
         display:flex;align-items:flex-start;gap:12px;padding:12px 16px;
         border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;
         background:${n.read ? "transparent" : "var(--green-dim)"}"
-        onclick="NotifCenter._click('${n.id}','${n.action}')"
+        onclick='NotifCenter._click(${JSON.stringify(n.id)}, ${JSON.stringify(n.action)})'
         onmouseenter="this.style.background='var(--surface2)'"
         onmouseleave="this.style.background='${n.read ? "transparent" : "var(--green-dim)"}'">
         <div style="
@@ -243,15 +243,15 @@ window.NotifCenter = {
         </div>
         <div style="flex:1;min-width:0">
           <div style="font-family:'Syne',sans-serif;font-weight:${n.read ? 600 : 700};font-size:12px;color:var(--text);margin-bottom:2px">
-            ${n.title}
+            ${esc(n.title)}
           </div>
           <div style="font-size:11px;color:var(--muted);line-height:1.4;margin-bottom:4px">
-            ${n.message}
+            ${esc(n.message)}
           </div>
-          <div style="font-size:10px;color:var(--muted2)">${timeAgo(n.timestamp)}</div>
+          <div style="font-size:10px;color:var(--muted2)">${esc(timeAgo(n.timestamp))}</div>
         </div>
         <button style="background:none;border:none;cursor:pointer;color:var(--muted2);padding:4px;flex-shrink:0;border-radius:4px;transition:.15s"
-          onclick="event.stopPropagation();NotifCenter.delete('${n.id}')"
+          onclick='event.stopPropagation();NotifCenter.delete(${JSON.stringify(n.id)})'
           onmouseenter="this.style.color='var(--red)'"
           onmouseleave="this.style.color='var(--muted2)'"
           title="Supprimer">

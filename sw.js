@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE = "upte-v1";
+const CACHE = "upte-v2";
 const ASSETS = [
   "/",
   "/index.html",
@@ -22,14 +22,29 @@ const ASSETS = [
   "/src/js/utils.js",
   "/src/js/validator.js",
   "/src/js/constants.js",
+  "/src/js/auth.js",
+  "/src/js/auth-screen.js",
+  "/src/js/sync.js",
+  "/src/js/supabase.js",
+  "/src/js/config.js",
   "/src/images/icon-192.png",
   "/src/images/icon-512.png",
 ];
 
-// Install — met tout en cache
+// Install — precache tolérant (un fichier manquant ne bloque pas tout le SW)
 self.addEventListener("install", (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
-  self.skipWaiting();
+  e.waitUntil(
+    caches.open(CACHE).then(async (cache) => {
+      await Promise.all(
+        ASSETS.map((url) =>
+          cache.add(url).catch(() => {
+            /* ignore : asset absent ou réseau indispo à l’install */
+          }),
+        ),
+      );
+      self.skipWaiting();
+    }),
+  );
 });
 
 // Activate — supprime les anciens caches
@@ -46,13 +61,12 @@ self.addEventListener("activate", (e) => {
   e.waitUntil(clients.claim());
 });
 
-// Fetch — Cache First pour les assets, Network First pour le reste
+// Fetch — cache d’abord pour les assets statiques
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
 
   const url = new URL(e.request.url);
 
-  // Ignore les requêtes externes (fonts, lottie, cdnjs...)
   if (url.origin !== self.location.origin) return;
 
   e.respondWith(
@@ -66,10 +80,10 @@ self.addEventListener("fetch", (e) => {
           return response;
         })
         .catch(() => {
-          // Fallback — renvoie index.html pour la navigation
           if (e.request.destination === "document") {
-            return caches.match("/UpTe/index.html");
+            return caches.match("/index.html");
           }
+          return Response.error();
         });
     }),
   );
