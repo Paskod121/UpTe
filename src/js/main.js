@@ -592,11 +592,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (isNewLogin) {
       window.history.replaceState({}, document.title, window.location.pathname);
-      AuthScreen.show();
-      AuthScreen._renderOnboarding(Auth.getDisplayName());
-    } else {
-      _launchApp();
     }
+    _launchApp();
   }
 
   /* ── Fix boucle Google OAuth ──
@@ -639,6 +636,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       window.location.reload();
     }
   });
+
+  const params = new URLSearchParams(location.search);
+  if (params.get("action") === "plan") UI.openModal("addStudy");
+  if (params.get("page")) UI.navigate(params.get("page"));
 
   await registerSW();
   const granted = await askNotifPermissionPremium();

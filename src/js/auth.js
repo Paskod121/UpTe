@@ -148,7 +148,7 @@ export const Auth = {
       .eq("id", this.user.id)
       .single();
     
-    this._isNewUser = true;
+    this._isNewUser = !data;
     if (!data) {
       await sb.from("users").insert({
         id: this.user.id,
