@@ -25,15 +25,17 @@ export class Storage {
     const d = this.get();
     d.sessions = s;
     this.set(d);
+    this._afterPersist();
   }
 
   /* ─── Paramètres établissement ─── */
+  /** Libellés neutres tant que l’utilisateur n’a pas enregistré ses vrais paramètres. */
   static DEFAULT_SETTINGS = {
-    universite: "UNIVERSITÉ DE LOMÉ",
-    ecole: "EPL",
-    parcours: "Licence Pro GL",
-    semestre: "Semestre 4",
-    annee: "2025–2026",
+    universite: "Ex. Mon université — à personnaliser",
+    ecole: "Ex. École / faculté — à personnaliser",
+    parcours: "Ex. Parcours (Licence, Master…)",
+    semestre: "Ex. Semestre ou trimestre",
+    annee: "Ex. Année universitaire",
   };
 
   static getSettings() {
@@ -50,6 +52,7 @@ export class Storage {
     try {
       localStorage.setItem(this.SETTINGS_KEY, JSON.stringify(s));
     } catch {}
+    this._afterPersist();
   }
 
   /* ─── Cours personnalisés ─── */
@@ -64,6 +67,18 @@ export class Storage {
   static saveCustomCourses(courses) {
     try {
       localStorage.setItem(this.COURSES_KEY, JSON.stringify(courses));
+    } catch {}
+    this._afterPersist();
+  }
+
+  /** Sync cloud (debounce) — évite import circulaire avec sync.js */
+  static _afterPersist() {
+    try {
+      queueMicrotask(() => {
+        if (typeof window !== "undefined" && window.Sync?.scheduleCloudSync) {
+          window.Sync.scheduleCloudSync();
+        }
+      });
     } catch {}
   }
   static resetCourses() {

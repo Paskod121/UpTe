@@ -2,7 +2,7 @@
 
 import { getSupabaseClient } from "./supabase.js";
 import { Auth } from "./auth.js";
-import { Sync } from "./sync.js";
+import { Sync, LAST_CLOUD_UID_KEY } from "./sync.js";
 import { Storage } from "./storage.js";
 
 const MESSAGES = {
@@ -488,7 +488,7 @@ export const AuthScreen = {
             color:var(--text);margin-bottom:8px;
           ">Bienvenue, ${name} !</div>
           <div style="font-size:13px;color:var(--muted)">
-            Dis-nous en plus pour personnaliser ton expérience.
+            Quelques infos pour ton profil — tout est modifiable plus tard dans Paramètres.
           </div>
         </div>
 
@@ -574,7 +574,7 @@ export const AuthScreen = {
           <div style="
             font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:var(--text);
           ">Ton université</div>
-          <input id="ob-universite" type="text" placeholder="Ex: Université de Lomé"
+          <input id="ob-universite" type="text" placeholder="Ex. Université ou établissement"
             value="${Storage.getSettings().universite || ""}"
             style="
               width:100%;padding:14px 16px;
@@ -586,7 +586,7 @@ export const AuthScreen = {
             onblur="this.style.borderColor='var(--border)'"
             oninput="window.AuthScreen._checkObStep3()"
           />
-          <input id="ob-ecole" type="text" placeholder="Ex: EPL, FSS, FASEG..."
+          <input id="ob-ecole" type="text" placeholder="Ex. École, faculté, département…"
             value="${Storage.getSettings().ecole || ""}"
             style="
               width:100%;padding:14px 16px;
@@ -1017,8 +1017,20 @@ export const AuthScreen = {
     /* ── Migration localStorage → Supabase ── */
     await window.Sync?.migrateFromLocal();
 
-    /* ── Pull données depuis Supabase ── */
+    /* ── Alignement cloud : pull puis push + confirmation si tout est OK ── */
     await window.Sync?.syncFromSupabase();
+    const pushedOk = await window.Sync?.syncToSupabase();
+    if (pushedOk === true && Auth.user?.id) {
+      try {
+        localStorage.setItem(LAST_CLOUD_UID_KEY, Auth.user.id);
+      } catch {
+        /* ignore */
+      }
+      window.UI?.toast(
+        "Tout est bien synchronisé avec ton compte (local + cloud).",
+        "success",
+      );
+    }
 
     if (window._appLaunched) {
       window.App?.renderDashboard();
@@ -1034,7 +1046,6 @@ export const AuthScreen = {
       window.Notes?.init();
       window.Combo?.init();
       window.NotifCenter?.init();
-      window.Sync?.syncToSupabase();
 
       // Met à jour la sidebar avec les infos du compte
       const card = document.getElementById("sidebarUserCard");

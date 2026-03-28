@@ -1,7 +1,7 @@
 {
   "name": "UpTe — Planificateur de révision",
   "short_name": "UpTe",
-  "description": "Gestion et planification des cours — Licence Pro GL S4, EPL Lomé",
+  "description": "Planificateur de révision, emploi du temps et suivi des cours pour étudiants.",
   "start_url": "/",
   "display": "fullscreen",
   "background_color": "#f4f6f3",

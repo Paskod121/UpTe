@@ -522,7 +522,6 @@ function _launchApp() {
   Notes.init();
   Combo.init();
   NotifCenter.init();
-  Sync.syncToSupabase();
 
   // Cache le bouton si déjà connecté
   if (Auth.isAuthenticated()) {
@@ -593,6 +592,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (isNewLogin) {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
+    await Sync.reconcileAfterLogin({ showToast: true });
     _launchApp();
   }
 
@@ -628,8 +628,19 @@ document.addEventListener("DOMContentLoaded", async () => {
           AuthScreen.show();
           AuthScreen._renderOnboarding(Auth.getDisplayName());
         } else {
-          _launchApp();
+          void Sync.reconcileAfterLogin({ showToast: true }).then(() =>
+            _launchApp(),
+          );
         }
+      } else if (
+        window._appLaunched &&
+        Auth.hasCompletedOnboarding !== false
+      ) {
+        void Sync.reconcileAfterLogin({ showToast: true }).then(() => {
+          window.App?.applySettings?.();
+          window.App?.renderDashboard?.();
+          window.UI?.renderMiniCalendar?.(null, null);
+        });
       }
     }
 

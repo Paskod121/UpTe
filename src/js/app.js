@@ -122,10 +122,12 @@ export class App {
     if (topbarSub) topbarSub.textContent = `${s.parcours} · ${s.semestre}`;
     if (logoSub) logoSub.textContent = `${s.ecole} · ${s.universite}`;
     if (sidebarSem) sidebarSem.textContent = s.semestre;
-    if (sidebarAnnee) sidebarAnnee.textContent = s.annee || "2025–2026";
+    if (sidebarAnnee)
+      sidebarAnnee.textContent = s.annee || Storage.DEFAULT_SETTINGS.annee;
 
     const scheduleYear = document.getElementById("scheduleYearTag");
-    if (scheduleYear) scheduleYear.textContent = s.annee || "2025–2026";
+    if (scheduleYear)
+      scheduleYear.textContent = s.annee || Storage.DEFAULT_SETTINGS.annee;
 
     const coursesTitle = document.getElementById("coursesPageTitle");
     if (coursesTitle)
@@ -148,7 +150,7 @@ export class App {
       "set-ecole": s.ecole,
       "set-parcours": s.parcours,
       "set-semestre": s.semestre,
-      "set-annee": s.annee || "2025–2026",
+      "set-annee": s.annee || Storage.DEFAULT_SETTINGS.annee,
     };
     Object.entries(map).forEach(([id, val]) => {
       const el = document.getElementById(id);
@@ -164,7 +166,7 @@ export class App {
       ecole: s.ecole,
       parcours: s.parcours,
       semestre: s.semestre,
-      annee: s.annee || "2025–2026",
+      annee: s.annee || Storage.DEFAULT_SETTINGS.annee,
     });
     // Bouton désactivé par défaut au chargement
     const btn = document.querySelector("#page-settings .btn-primary");
@@ -191,7 +193,9 @@ export class App {
       ecole: document.getElementById("set-ecole").value.trim(),
       parcours: document.getElementById("set-parcours").value.trim(),
       semestre: document.getElementById("set-semestre").value.trim(),
-      annee: document.getElementById("set-annee")?.value.trim() || "2025–2026",
+      annee:
+        document.getElementById("set-annee")?.value.trim() ||
+        Storage.DEFAULT_SETTINGS.annee,
     };
 
     if (!validateSettings(data)) {
@@ -219,9 +223,8 @@ export class App {
       this._settingsSnapshot = JSON.stringify(data);
       this.applySettings();
 
-      // Sync vers Supabase si connecté
       if (window.Auth?.isAuthenticated()) {
-        window.Sync?.syncToSupabase();
+        window.Sync?.scheduleCloudSync();
         this._renderProfileCard();
       }
 

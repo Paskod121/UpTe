@@ -85,9 +85,21 @@ export const Auth = {
     return data;
   },
 
-  /* ── Déconnexion ── */
+  /* ── Déconnexion — envoie d’abord le local vers le cloud du compte courant ── */
   async signOut() {
+    try {
+      if (this.user && typeof window !== "undefined" && window.Sync) {
+        await window.Sync.syncToSupabase();
+      }
+    } catch {
+      /* on déconnecte quand même */
+    }
     await this.log("auth.logout", "auth", this.user?.id);
+    try {
+      localStorage.removeItem("upte_last_cloud_uid");
+    } catch {
+      /* ignore */
+    }
     const sb = await getClient();
     await sb.auth.signOut();
   },

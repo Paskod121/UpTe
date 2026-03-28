@@ -6,6 +6,8 @@ import { getSupabaseClient } from "./supabase.js";
 
 /* ─── File d'attente offline ─── */
 const QUEUE_KEY = "upte_sync_queue";
+/** Dernier user_id pour lequel le local a été aligné sur le cloud (changement de compte). */
+export const LAST_CLOUD_UID_KEY = "upte_last_cloud_uid";
 
 function getQueue() {
   try {
@@ -35,12 +37,15 @@ async function sb() {
 export const Sync = {
   _syncing: false,
   _online: navigator.onLine,
+  /** Pull Supabase en cours — ne pas déclencher de push debouncé depuis Storage */
+  _applyingRemote: false,
+  _pushDebounce: null,
 
   init() {
     window.addEventListener("online", () => {
       this._online = true;
       void this.flushQueue().then((didSync) => {
-        if (didSync) this._showSyncToast();
+        if (didSync) this._showSyncConfirmedToast();
       });
     });
     window.addEventListener("offline", () => {
@@ -134,10 +139,12 @@ export const Sync = {
     }
   },
 
-  /* ── Pull Supabase → localStorage ── */
+  /* ── Pull Supabase → localStorage
+      true = OK, false = erreur, null = ignoré ── */
   async syncFromSupabase() {
-    if (!Auth.isAuthenticated() || !this.isOnline()) return;
+    if (!Auth.isAuthenticated() || !this.isOnline()) return null;
 
+    this._applyingRemote = true;
     try {
       const client = await sb();
       const uid = Auth.user.id;
@@ -150,12 +157,13 @@ export const Sync = {
         .single();
 
       if (settings) {
+        const d = Storage.DEFAULT_SETTINGS;
         Storage.saveSettings({
-          universite: settings.universite || "UNIVERSITÉ DE LOMÉ",
-          ecole: settings.ecole || "EPL",
-          parcours: settings.parcours || "Licence Pro GL",
-          semestre: settings.semestre || "Semestre 4",
-          annee: settings.annee || "2025–2026",
+          universite: (settings.universite && String(settings.universite).trim()) || d.universite,
+          ecole: (settings.ecole && String(settings.ecole).trim()) || d.ecole,
+          parcours: (settings.parcours && String(settings.parcours).trim()) || d.parcours,
+          semestre: (settings.semestre && String(settings.semestre).trim()) || d.semestre,
+          annee: (settings.annee && String(settings.annee).trim()) || d.annee,
         });
         if (settings.theme) localStorage.setItem("upte_theme", settings.theme);
         if (settings.pomo_total)
@@ -204,11 +212,142 @@ export const Sync = {
             notes: s.notes,
           })),
         );
+      } else if (Array.isArray(sessions) && sessions.length === 0) {
+        Storage.saveSessions([]);
       }
 
       await Auth.log("sync.pull", "sync", uid);
+      return true;
     } catch (err) {
       console.error("Sync pull error:", err);
+      return false;
+    } finally {
+      this._applyingRemote = false;
+    }
+  },
+
+  /**
+   * Après connexion ou retour réseau : aligne local ↔ cloud sans mélanger deux comptes.
+   * - Changement de compte (uid ≠ dernier mémorisé) : pull cloud du nouveau compte d’abord, puis push.
+   * - Même compte : push local d’abord (sauver le travail), puis pull (autres appareils).
+   */
+  async reconcileAfterLogin(opts = {}) {
+    const showToast = opts.showToast !== false;
+    if (!Auth.isAuthenticated()) return { ok: false, reason: "no-auth" };
+
+    if (!this.isOnline()) {
+      this.queueOfflineAction({ type: "reconcile", uid: Auth.user.id });
+      if (showToast) {
+        window.UI?.toast(
+          "Hors ligne — tes modifications seront envoyées dès la connexion.",
+          "info",
+        );
+      }
+      return { ok: false, offline: true };
+    }
+
+    const uid = Auth.user.id;
+    let lastUid = null;
+    try {
+      lastUid = localStorage.getItem(LAST_CLOUD_UID_KEY);
+    } catch {
+      lastUid = null;
+    }
+
+    const accountSwitch = lastUid != null && lastUid !== uid;
+
+    if (accountSwitch) {
+      const pull = await this.syncFromSupabase();
+      if (pull === false) {
+        if (showToast) {
+          window.UI?.toast(
+            "Impossible de charger les données de ce compte. Réessaie.",
+            "error",
+          );
+        }
+        return { ok: false, step: "pull" };
+      }
+      try {
+        localStorage.setItem(LAST_CLOUD_UID_KEY, uid);
+      } catch {}
+      this._refreshAppAfterSync();
+      const push = await this.syncToSupabase();
+      if (push === false) {
+        if (showToast) {
+          window.UI?.toast(
+            "Données chargées, mais l’envoi vers le cloud a échoué.",
+            "error",
+          );
+        }
+        return { ok: false, step: "push", accountSwitch: true };
+      }
+      if (showToast) this._showSyncConfirmedToast();
+      return { ok: true, accountSwitch: true };
+    }
+
+    const pushFirst = await this.syncToSupabase();
+    if (pushFirst === false) {
+      if (showToast) {
+        window.UI?.toast(
+          "Synchronisation vers ton compte impossible pour l’instant.",
+          "error",
+        );
+      }
+      return { ok: false, step: "push" };
+    }
+
+    const pullSecond = await this.syncFromSupabase();
+    if (pullSecond === false) {
+      if (showToast) {
+        window.UI?.toast(
+          "Tes données sont enregistrées ; la mise à jour distante a échoué.",
+          "error",
+        );
+      }
+      try {
+        localStorage.setItem(LAST_CLOUD_UID_KEY, uid);
+      } catch {}
+      return { ok: false, step: "pull" };
+    }
+
+    try {
+      localStorage.setItem(LAST_CLOUD_UID_KEY, uid);
+    } catch {}
+    this._refreshAppAfterSync();
+    if (showToast) this._showSyncConfirmedToast();
+    return { ok: true };
+  },
+
+  /** Push différé après chaque écriture locale (utilisateur connecté). */
+  scheduleCloudSync() {
+    if (this._applyingRemote) return;
+    if (!Auth.isAuthenticated()) return;
+    if (!this.isOnline()) {
+      this.queueOfflineAction({ type: "local-change", at: Date.now() });
+      return;
+    }
+    if (this._pushDebounce) clearTimeout(this._pushDebounce);
+    this._pushDebounce = setTimeout(async () => {
+      this._pushDebounce = null;
+      await this.syncToSupabase();
+    }, 1400);
+  },
+
+  _refreshAppAfterSync() {
+    try {
+      window.App?.applySettings?.();
+      window.App?.renderDashboard?.();
+      window.App?.renderCourseList?.();
+      window.App?.renderScheduleList?.();
+      window.App?.renderWeekGrid?.();
+      window.App?.populateCourseSelects?.();
+      if (window.UI?.currentPage === "planner") window.App?.renderPlanner?.();
+      if (window.UI?.currentPage === "settings") window.App?.renderSettings?.();
+      if (window.UI?.currentPage === "learn") window.Learn?.render?.();
+      if (window.UI?.currentPage === "notes") window.Notes?.render?.();
+      window.UI?.renderMiniCalendar?.(null, null);
+    } catch (e) {
+      console.warn("Refresh after sync:", e);
     }
   },
 
@@ -306,33 +445,22 @@ export const Sync = {
     const queue = getQueue();
     if (queue.length === 0) return false;
 
-    const ok = await this.syncToSupabase();
-    if (ok === true) saveQueue([]);
-    return ok === true;
+    const ok = await this.reconcileAfterLogin({ showToast: false });
+    if (ok.ok) saveQueue([]);
+    else {
+      const fallback = await this.syncToSupabase();
+      if (fallback === true) saveQueue([]);
+      return fallback === true;
+    }
+    return true;
   },
 
-  /* ── Toast sync discret ── */
-  _showSyncToast() {
+  /* ── Toast : confirmation explicite compte ↔ cloud ── */
+  _showSyncConfirmedToast() {
     if (!Auth.isAuthenticated()) return;
-    const tc = document.getElementById("toastContainer");
-    if (!tc) return;
-    const el = document.createElement("div");
-    el.className = "toast success";
-    el.style.cssText =
-      "min-width:200px;display:flex;align-items:center;gap:10px";
-    el.innerHTML = `
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-        <path d="M20 11A8.1 8.1 0 0 0 4.5 9"/>
-        <polyline points="4 6 4.5 9 8 9"/>
-        <path d="M4 13a8.1 8.1 0 0 0 15.5 2"/>
-        <polyline points="20 18 19.5 15 16 15"/>
-      </svg>
-      <span style="font-size:12px;color:var(--muted)">Données synchronisées</span>`;
-    tc.appendChild(el);
-    setTimeout(() => {
-      el.style.animation = "toast-out .3s ease forwards";
-      setTimeout(() => el.remove(), 300);
-    }, 2000);
+    window.UI?.toast(
+      "Tout est bien synchronisé avec ton compte (local + cloud).",
+      "success",
+    );
   },
 };
