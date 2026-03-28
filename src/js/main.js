@@ -616,13 +616,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById("sidebarAuthBtn")?.remove();
 
       if (document.getElementById("authScreen")) {
-        if (AuthScreen._step !== "onboarding") {
+        /* Questionnaire : uniquement si le serveur dit que ce n’est pas fini */
+        if (Auth.hasCompletedOnboarding === false) {
+          AuthScreen._renderOnboarding(Auth.getDisplayName());
+        } else if (AuthScreen._step !== "onboarding") {
           AuthScreen._renderWebAuthn(Auth.getDisplayName());
         }
       } else if (!window._appLaunched) {
-        // Supabase a consommé le hash avant nous
-        // → premier login via redirect Google
-        if (Auth._isNewUser) {
+        // Supabase a consommé le hash avant nous (ex. redirect Google)
+        if (Auth.hasCompletedOnboarding === false) {
           AuthScreen.show();
           AuthScreen._renderOnboarding(Auth.getDisplayName());
         } else {

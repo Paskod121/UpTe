@@ -6,6 +6,8 @@ async function getClient() { return getSupabaseClient(); }
 export const Auth = {
   user: null,
   session: null,
+  /** null = pas chargé ; false = doit voir l’onboarding ; true = terminé (serveur) */
+  hasCompletedOnboarding: null,
   _listeners: [],
 
   /* ── Initialisation ── */
@@ -15,13 +17,24 @@ export const Auth = {
     this.session = data.session;
     this.user = data.session?.user ?? null;
 
+    if (this.user) {
+      await this._ensureProfile();
+    }
+
     sb.auth.onAuthStateChange(async (event, session) => {
       this.session = session;
       this.user = session?.user ?? null;
+
+      if (!this.user) {
+        this.hasCompletedOnboarding = null;
+      } else if (event === "SIGNED_IN") {
+        /* Profil à jour AVANT les listeners (évite course + mauvais écran onboarding) */
+        await this._ensureProfile();
+      }
+
       this._notify(event, session);
 
-      if (event === "SIGNED_IN") {
-        await this._ensureProfile();
+      if (event === "SIGNED_IN" && this.user) {
         await this.log("auth.login", "auth", this.user.id, {
           provider: session.user.app_metadata?.provider,
         });
@@ -142,12 +155,18 @@ export const Auth = {
   async _ensureProfile() {
     if (!this.user) return;
     const sb = await getClient();
-    const { data } = await sb
+    const { data, error } = await sb
       .from("users")
-      .select("id")
+      .select("id, has_completed_onboarding")
       .eq("id", this.user.id)
-      .single();
-    
+      .maybeSingle();
+
+    if (error) {
+      console.error("Profil utilisateur:", error);
+      this.hasCompletedOnboarding = true;
+      return;
+    }
+
     this._isNewUser = !data;
     if (!data) {
       await sb.from("users").insert({
@@ -155,12 +174,15 @@ export const Auth = {
         email: this.user.email,
         full_name: this.user.user_metadata?.full_name || "",
         avatar_url: this.user.user_metadata?.avatar_url || "",
+        has_completed_onboarding: false,
       });
       await sb.from("settings").insert({ user_id: this.user.id });
+      this.hasCompletedOnboarding = false;
+    } else {
+      this._isNewUser = false;
+      this.hasCompletedOnboarding = !!data.has_completed_onboarding;
     }
-    else { this._isNewUser = false; }
 
-    // Met à jour last_seen_at
     await sb
       .from("users")
       .update({ last_seen_at: new Date().toISOString() })

@@ -772,8 +772,10 @@ export const AuthScreen = {
             universite,
             parcours: settings.parcours,
             semestre: settings.semestre,
+            has_completed_onboarding: true,
           })
           .eq("id", Auth.user.id);
+        Auth.hasCompletedOnboarding = true;
       } catch {}
     }
 
