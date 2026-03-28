@@ -22,7 +22,11 @@ UpTe/
     │   ├── utilities.css   + combobox, schedule builder, theme toast
     │   └── learning.css
     ├── js/
-    │   ├── main.js         expose App/UI/Learn/Notes/Combo
+    │   ├── main.js         bootstrap, Auth, Sync, App
+    │   ├── auth.js         Supabase auth + profil + WebAuthn (enrôlement)
+    │   ├── auth-screen.js  UI connexion / onboarding / WebAuthn optionnel
+    │   ├── sync.js         push/pull Supabase
+    │   ├── supabase.js     client Supabase
     │   ├── constants.js    COURSES_DATA schedules[], WEEK_DAYS (7 jours)
     │   ├── storage.js      + backup/restore courses
     │   ├── utils.js
@@ -47,7 +51,7 @@ UpTe/
 
 | Fichier | Contenu |
 |---|---|
-| `variables.css` | `:root`, thèmes, `::backdrop` pour transition fullscreen |
+| `variables.css` | `:root`, thèmes (`green` défaut, `blue`, `light`, `rose`), `::backdrop` pour transition fullscreen |
 | `layout.css` | Sidebar scrollable, topbar, grilles, responsive |
 | `components.css` | Cards, slots, modales, formulaires, validation |
 | `utilities.css` | Boutons, tags, animations, combobox, schedule builder, theme toast, fullscreen btn |
@@ -74,7 +78,7 @@ gl_s4_planner_v2         sessions de révision
 upte_settings            { universite, ecole, parcours, semestre, annee }
 upte_courses             cours personnalisés | null
 upte_courses_backup      sauvegarde temporaire avant réinitialisation
-upte_theme               "light" | "blue" | "green"
+upte_theme               "light" | "blue" | "green" | "rose"
 upte_pomo_total          compteur Pomodoro
 ```
 
@@ -103,7 +107,7 @@ courseByCode(code)
 getCourseSchedules(c)       → Schedule[]
 getSchedulesForDay(c, jour)
 getCoursesForDay(courses, jour)
-getTheme()                  → "green" | "blue" | "light"
+getTheme()                  → "green" | "blue" | "light" | "rose"
 courseColor(course)
 typeColor(typeColors)
 ```
@@ -111,7 +115,7 @@ typeColor(typeColors)
 ### `ui.js`
 
 - Navigation 8 pages : dashboard, schedule, courses, planner, tips, learn, notes, settings
-- `cycleTheme()` — anti-spam (`_themeChanging`), toast premium avec points colorés, supprime les anciens toasts thème avant d'en créer un nouveau
+- `cycleTheme()` — anti-spam (`_themeChanging`) ; enchaîne Vert → Bleu → Clair → Rose → Vert (pas de toast à chaque cycle)
 - `toggleFullscreen()` — bascule fullscreen API, met à jour l'icône du bouton
 - `_rerenderAll()` — re-rendu complet au changement de thème
 - Sidebar scrollable via CSS (`nav-section` avec `overflow-y: auto`)
@@ -135,6 +139,16 @@ Paramètres établissement — 5 champs : `universite`, `ecole`, `parcours`, `se
 `renderWeekGrid()` — `START_H = 6`, `END_H = 21`, `totalPx + 24` (padding bas), colonnes dynamiques selon `WEEK_DAYS.length`.
 
 Pages cours dynamiques — `coursesPageTitle`, `coursesCreditsTag`, `scheduleYearTag` mis à jour.
+
+---
+
+## Auth, synchronisation, onboarding
+
+| Fichier | Rôle |
+|---|---|
+| `auth.js` | Supabase : Google OAuth, OTP e-mail, profil `users`. WebAuthn : enrôlement optionnel (`enrollWebAuthn`) — enregistre l’ID credential côté profil. La session reste **OAuth / OTP** ; un flux « connexion uniquement biométrie » nécessiterait un backend qui valide les assertions FIDO2 (non présent ici). |
+| `auth-screen.js` | Écran connexion + questionnaire post-connexion : filières et semestres avec **champ de recherche** (liste indicative, saisie libre université/école). |
+| `sync.js` | Push/pull (settings dont `theme`, cours, sessions) après connexion. |
 
 ---
 

@@ -87,6 +87,44 @@
   --tip-border: #0e9f6e30;
 }
 
+/*
+ * Thème Rose — même famille « pro » que Vert / Bleu : fond sombre profond,
+ * surfaces superposées, accent #FFBBC9 en lueur (pas un mode clair teinté).
+ */
+[data-theme="rose"] {
+  --bg: #0f080b;
+  --bg2: #140c10;
+  --bg3: #1a1115;
+  --surface: #22181d;
+  --surface2: #2a1f25;
+  --border: #3d2e36;
+  /* Accent = rose poudré lumineux (icônes, hover) ; boutons = rose soutenu */
+  --green: #ffbbc9;
+  --green2: #f0a0b8;
+  --green3: #c75a7a;
+  --green-dim: #ffbbc922;
+  --green-glow: #ffbbc948;
+  --text: #f7eaee;
+  --muted: #b89aa4;
+  --muted2: #8a737e;
+  --shadow: 0 2px 10px #00000055, 0 14px 44px #1a050a50;
+  --accent-logo-end: #8b3d52;
+  --event-cours-bg-a: #ffbbc958;
+  --event-cours-bg-b: #c75a7a45;
+  --event-cours-text: #fde8ef;
+  --tip-bg-a: #ffbbc914;
+  --tip-border: #ffbbc938;
+}
+
+/* Visible derrière tout le shell : le body est le fond réel (layout.css). */
+html[data-theme="rose"] body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 120% 80% at 85% -10%, #3d243044 0%, transparent 50%),
+    radial-gradient(ellipse 100% 60% at 0% 100%, #2a182844 0%, transparent 45%);
+  background-attachment: fixed;
+}
+
 html {
   transition: background-color .3s ease;
 }

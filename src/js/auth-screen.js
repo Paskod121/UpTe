@@ -17,19 +17,40 @@ const MESSAGES = {
   webauthn: "Connexion instantanée au prochain démarrage ?",
 };
 
+/** Liste large + recherche en temps réel — pas exhaustive, d’où « Autre » + Paramètres. */
 const FILIERES = [
+  "Licence 1",
+  "Licence 2",
+  "Licence 3",
+  "Licence Pro (informatique, réseaux, etc.)",
+  "BUT",
+  "BTS",
+  "DUT",
+  "CPGE",
+  "Bachelor / Licence générale (étranger)",
+  "BSc / BA / MSc (international)",
+  "Master 1",
+  "Master 2",
+  "MBA / Executive",
+  "Doctorat",
+  "École d’ingénieurs (cycle)",
+  "École de commerce / management",
+  "Médecine / santé",
+  "Droit / sciences politiques",
+  "Sciences (MINT)",
+  "Lettres, langues, arts",
+  "Éducation / concours enseignement",
+  "Formation professionnelle / certifiante",
+  "Bootcamp / reconversion tech",
+  "Erasmus+ / mobilité étudiante",
+  "Alternance / apprentissage",
   "Licence Pro GL",
   "Licence Pro SRI",
   "Licence Pro IG",
   "Licence Pro RT",
   "Licence Pro GE",
-  "Licence 1",
-  "Licence 2",
-  "Licence 3",
-  "Master 1",
-  "Master 2",
   "BTS Informatique",
-  "Autre",
+  "Autre — je préciserai dans Paramètres",
 ];
 
 const SEMESTRES = [
@@ -42,6 +63,16 @@ const SEMESTRES = [
   "Trimestre 1",
   "Trimestre 2",
   "Trimestre 3",
+  "Année 1",
+  "Année 2",
+  "Année 3",
+  "Année 4",
+  "Année 5+",
+  "Bloc / quadrimestre",
+  "Summer term",
+  "Winter term",
+  "Année universitaire complète",
+  "Non applicable / pause",
 ];
 
 function randomMsg(arr) {
@@ -507,18 +538,23 @@ export const AuthScreen = {
             .join("")}
         </div>
 
-        <!-- Étape 1 — Filière -->
+        <!-- Étape 1 — Filière (recherche + liste scrollable) -->
         <div id="ob-step-1" style="display:flex;flex-direction:column;gap:16px">
           <div style="
             font-family:'Syne',sans-serif;font-weight:700;font-size:16px;
             color:var(--text);
           ">Ta filière</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            ${FILIERES.slice(0, 10)
-              .map(
-                (f) => `
-              <button onclick="window.AuthScreen._selectFiliere('${f}', this)" style="
-                padding:10px 14px;text-align:left;
+          <input type="search" id="ob-filiere-search" placeholder="Filtrer : Master, BTS, Erasmus, médecine…" autocomplete="off"
+            style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;box-sizing:border-box;font-family:'DM Sans',sans-serif"
+            oninput="window.AuthScreen._filterObList('filiere', this.value)" />
+          <p style="font-size:11px;color:var(--muted2);margin:0;line-height:1.4">
+            Liste indicative — cherche ou choisis « Autre », puis affine dans Paramètres.
+          </p>
+          <div id="ob-filiere-list" style="max-height:min(42vh,260px);overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px">
+            ${FILIERES.map(
+              (f) => `
+              <button type="button" class="ob-filiere-btn" onclick='window.AuthScreen._selectFiliere(${JSON.stringify(f)}, this)' style="
+                padding:10px 14px;text-align:left;flex-shrink:0;
                 background:var(--surface);border:1.5px solid var(--border);
                 border-radius:10px;cursor:pointer;
                 font-family:'DM Sans',sans-serif;font-size:13px;
@@ -529,8 +565,7 @@ export const AuthScreen = {
                 ${f}
               </button>
             `,
-              )
-              .join("")}
+            ).join("")}
           </div>
           <button id="ob-next-1" onclick="window.AuthScreen._obNext(1)" disabled style="
             width:100%;padding:14px;
@@ -540,19 +575,22 @@ export const AuthScreen = {
           ">Suivant →</button>
         </div>
 
-        <!-- Étape 2 — Semestre (caché) -->
+        <!-- Étape 2 — Semestre / parcours (caché) -->
         <div id="ob-step-2" style="display:none;flex-direction:column;gap:16px">
           <div style="
             font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:var(--text);
-          ">Ton semestre actuel</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          ">Ton semestre ou ta position dans le parcours</div>
+          <input type="search" id="ob-semestre-search" placeholder="Filtrer : S3, année 2, trimestre…" autocomplete="off"
+            style="width:100%;padding:12px 14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);font-size:14px;box-sizing:border-box;font-family:'DM Sans',sans-serif"
+            oninput="window.AuthScreen._filterObList('semestre', this.value)" />
+          <div id="ob-semestre-list" style="max-height:min(38vh,220px);overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px">
             ${SEMESTRES.map(
               (s) => `
-              <button onclick="window.AuthScreen._selectSemestre('${s}', this)" style="
-                padding:10px;text-align:center;
+              <button type="button" class="ob-semestre-btn" onclick='window.AuthScreen._selectSemestre(${JSON.stringify(s)}, this)' style="
+                padding:10px 14px;text-align:left;flex-shrink:0;
                 background:var(--surface);border:1.5px solid var(--border);
                 border-radius:10px;cursor:pointer;
-                font-size:13px;color:var(--text);transition:all .15s;
+                font-size:13px;color:var(--text);transition:all .15s;font-family:'DM Sans',sans-serif;
               "
                 onmouseenter="if(!this.classList.contains('selected')){this.style.borderColor='var(--green3)'}"
                 onmouseleave="if(!this.classList.contains('selected')){this.style.borderColor='var(--border)'}">
@@ -618,7 +656,7 @@ export const AuthScreen = {
 
     // Si WebAuthn non supporté → finalise directement
     if (!window.PublicKeyCredential) {
-      this._finalize(name);
+      this._finalize();
       return;
     }
 
@@ -653,7 +691,7 @@ export const AuthScreen = {
         </div>
 
         <div style="display:flex;flex-direction:column;gap:10px;width:100%">
-          <button onclick="window.AuthScreen._enrollAndFinalize('${name}')" style="
+          <button type="button" onclick="window.AuthScreen._enrollAndFinalize()" style="
             width:100%;padding:14px;
             background:var(--green3);border:none;border-radius:12px;
             font-family:'Syne',sans-serif;font-weight:700;font-size:14px;
@@ -661,7 +699,7 @@ export const AuthScreen = {
           " onmouseenter="this.style.opacity='.9'" onmouseleave="this.style.opacity='1'">
             Activer la biométrie
           </button>
-          <button onclick="window.AuthScreen._finalize('${name}')" style="
+          <button type="button" onclick="window.AuthScreen._finalize()" style="
             width:100%;padding:12px;
             background:none;border:1.5px solid var(--border);
             border-radius:12px;font-size:14px;
@@ -672,7 +710,7 @@ export const AuthScreen = {
         </div>
 
         <div style="font-size:11px;color:var(--muted2)">
-          Stocké sur cet appareil uniquement — jamais envoyé à nos serveurs.
+          La clé privée reste dans ton appareil ; un identifiant technique peut être enregistré sur ton profil pour une future évolution.
         </div>
       </div>
     `;
@@ -681,6 +719,22 @@ export const AuthScreen = {
   /* ════════════════════════════════
      ONBOARDING HELPERS
   ════════════════════════════════ */
+  _filterObList(kind, query) {
+    const sel =
+      kind === "filiere" ? ".ob-filiere-btn" : ".ob-semestre-btn";
+    const raw = (query || "").trim().toLowerCase();
+    const norm = (s) =>
+      s
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+    const nq = norm(raw);
+    document.querySelectorAll(sel).forEach((btn) => {
+      const t = norm(btn.textContent || "");
+      btn.style.display = !nq || t.includes(nq) ? "" : "none";
+    });
+  },
+
   _selectFiliere(filiere, btn) {
     document
       .querySelectorAll("#ob-step-1 button:not(#ob-next-1)")
@@ -968,9 +1022,23 @@ export const AuthScreen = {
     this.hide();
   },
 
-  async _enrollAndFinalize(name) {
-    await Auth.enrollWebAuthn();
-    this._finalize(name);
+  async _enrollAndFinalize() {
+    try {
+      const ok = await Auth.enrollWebAuthn();
+      if (!ok && window.UI?.toast) {
+        window.UI.toast(
+          "Biométrie non activée (annulée ou indisponible). Tu pourras réessayer plus tard.",
+          "warning",
+        );
+      }
+    } catch (e) {
+      console.error("WebAuthn enroll:", e);
+      window.UI?.toast?.(
+        "Impossible d’enregistrer la biométrie pour le moment.",
+        "warning",
+      );
+    }
+    await this._finalize();
   },
 
   /* ════════════════════════════════
@@ -978,6 +1046,7 @@ export const AuthScreen = {
      Migration + sync + launch app
   ════════════════════════════════ */
   async _finalize(name) {
+    const displayName = name || Auth.getDisplayName();
     clearInterval(this._otpTimer);
     this._stopCamera();
 
@@ -1001,7 +1070,7 @@ export const AuthScreen = {
         <div style="flex:1">
           <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;
             color:var(--text);margin-bottom:2px">
-            ${name ? MESSAGES.googleSuccess(name) : MESSAGES.otpSuccess}
+            ${displayName ? MESSAGES.googleSuccess(displayName) : MESSAGES.otpSuccess}
           </div>
           <div style="font-size:11px;color:var(--muted)">Synchronisation en cours…</div>
         </div>`;

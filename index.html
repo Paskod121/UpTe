@@ -73,13 +73,13 @@
       (function () {
         try {
           const t = localStorage.getItem("upte_theme");
-          const theme = t === "blue" || t === "green" ? t : "light";
-          if (theme === "blue")
+          if (t === "blue")
             document.documentElement.setAttribute("data-theme", "blue");
-          if (theme === "green")
-            document.documentElement.removeAttribute("data-theme");
-          if (theme === "light")
+          else if (t === "light")
             document.documentElement.setAttribute("data-theme", "light");
+          else if (t === "rose")
+            document.documentElement.setAttribute("data-theme", "rose");
+          else document.documentElement.removeAttribute("data-theme");
         } catch {}
       })();
 

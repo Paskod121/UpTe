@@ -118,9 +118,11 @@ export const Auth = {
             displayName: this.user.user_metadata?.full_name || this.user.email,
           },
           pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+          attestation: "none",
           authenticatorSelection: {
             authenticatorAttachment: "platform",
             userVerification: "required",
+            residentKey: "preferred",
           },
           timeout: 60000,
         },

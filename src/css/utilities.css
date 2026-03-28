@@ -792,6 +792,10 @@
   background: #16a34a;
 }
 
+.tpd[data-theme="rose"] {
+  background: linear-gradient(135deg, #ffbbc9, #c75a7a);
+}
+
 .tpd.active {
   transform: scale(1.4);
   border-color: var(--green);

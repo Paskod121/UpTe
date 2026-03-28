@@ -72,12 +72,13 @@ export function getCoursesForDay(courses, jour) {
   return courses.filter((c) => getSchedulesForDay(c, jour).length > 0);
 }
 
-/** Retourne le thème actif : "green" | "blue" | "light" */
+/** Retourne le thème actif : "green" | "blue" | "light" | "rose" */
 export function getTheme() {
   try {
     const t = localStorage.getItem("upte_theme");
-    if (t === "blue")  return "blue";
+    if (t === "blue") return "blue";
     if (t === "green") return "green";
+    if (t === "rose") return "rose";
     return "light";
   } catch {
     return "light";

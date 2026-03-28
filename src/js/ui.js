@@ -9,12 +9,14 @@ const THEMES = [
   { id: "green", label: "Vert" },
   { id: "blue", label: "Bleu" },
   { id: "light", label: "Clair" },
+  { id: "rose", label: "Rose" },
 ];
 
 const THEME_META = {
   light: "#ffffff",
   blue: "#0a1628",
   green: "#111510",
+  rose: "#0f080b",
 };
 
 export class UI {
